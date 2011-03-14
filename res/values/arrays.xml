@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="teiden_group">
+        <item>
+            06:20〜10:00 の時間帯のうち3時間程度\n
+            16:50～20:30 の時間帯のうち3時間程度
+        </item>
+        <item>
+            09:20～13:00 の時間帯のうち3時間程度\n
+            18:20～22:00 の時間帯のうち3時間程度
+        </item>
+        <item>
+            12:20～16:00 の時間帯のうち3時間程度
+        </item>
+        <item>
+            13:50～17:30 の時間帯のうち3時間程度
+        </item>
+        <item>
+            15:20～19:00 の時間帯のうち3時間程度
+        </item>
+    </string-array>
+    <string-array name="prefs">
+        <item>東京都</item>
+        <item>神奈川県</item>
+        <item>千葉県</item>
+        <item>埼玉県</item>
+        <item>静岡県</item>
+        <item>栃木県</item>
+        <item>群馬県</item>
+        <item>茨城県</item>
+        <item>山梨県</item>
+    </string-array>
+</resources>

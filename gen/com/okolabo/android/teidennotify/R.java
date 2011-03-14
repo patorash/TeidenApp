@@ -8,16 +8,36 @@
 package com.okolabo.android.teidennotify;
 
 public final class R {
+    public static final class array {
+        public static final int prefs=0x7f040001;
+        public static final int teiden_group=0x7f040000;
+    }
     public static final class attr {
     }
     public static final class drawable {
         public static final int icon=0x7f020000;
     }
+    public static final class id {
+        public static final int currentAddress=0x7f070000;
+        public static final int groupNumber=0x7f070001;
+        public static final int teidenSpan=0x7f070002;
+    }
     public static final class layout {
         public static final int main=0x7f030000;
     }
     public static final class string {
-        public static final int app_name=0x7f040001;
-        public static final int hello=0x7f040000;
+        public static final int address_loading=0x7f050003;
+        public static final int android_exception_service_id=0x7f050001;
+        public static final int app_name=0x7f050000;
+        public static final int current_address=0x7f050002;
+        public static final int current_group=0x7f050004;
+        public static final int dai=0x7f050005;
+        public static final int group=0x7f050006;
+        public static final int out_of_area=0x7f050008;
+        public static final int teiden_span=0x7f050007;
+    }
+    public static final class style {
+        public static final int HeadLineStyle=0x7f060000;
+        public static final int Text=0x7f060001;
     }
 }
