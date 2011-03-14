@@ -17,6 +17,7 @@ import net.htmlparser.jericho.Source;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -25,6 +26,9 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -57,6 +61,8 @@ public class Top extends Activity implements LocationListener{
     
     private EditText mEditAddress;
     
+    private TabHost mTabs;
+    
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
         TEIDEN_URL_LIST.put("東京都", "http://mainichi.jp/select/weathernews/20110311/mai/keikakuteiden/tokyo.html");
@@ -79,17 +85,17 @@ public class Top extends Activity implements LocationListener{
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         
         // タブを作成
-        TabHost tabs = (TabHost) findViewById(R.id.tabhost);
-        tabs.setup();
-        TabHost.TabSpec spec = tabs.newTabSpec("tag1");
+        mTabs = (TabHost) findViewById(R.id.tabhost);
+        mTabs.setup();
+        TabHost.TabSpec spec = mTabs.newTabSpec("tag1");
         spec.setContent(R.id.tab1);
         spec.setIndicator(getString(R.string.tab_current_address));
-        tabs.addTab(spec);
+        mTabs.addTab(spec);
         
-        spec = tabs.newTabSpec("tag2");
+        spec = mTabs.newTabSpec("tag2");
         spec.setContent(R.id.tab2);
         spec.setIndicator(getString(R.string.tab_search));
-        tabs.addTab(spec);
+        mTabs.addTab(spec);
         
         // スピナー
         mSpnPref = (Spinner) findViewById(R.id.pref);
@@ -401,31 +407,58 @@ public class Top extends Activity implements LocationListener{
         return value;
     }
     
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//            case R.id.menu_share:
-//                // 検索候補のクリア
-//                share();
-//                break;
-//                
-//            case R.id.menu_finish:
-//                finish();
-//                break;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-//    
-//    private void share() {
-//        // TODO 自動生成されたメソッド・スタブ
-//        
-//    }
-//
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.menu_top, menu);
-//        return super.onCreateOptionsMenu(menu);
-//    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_share:
+                // 結果を共有する
+                share();
+                break;
+                
+            case R.id.menu_finish:
+                finish();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    
+    private void share() {
+        StringBuilder builder = new StringBuilder();
+        TextView groupNumber;
+        TextView teidenSpan;
+        String current = mTabs.getCurrentTabTag();
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        if (current == "tag1") {
+            // 現在地
+            groupNumber = (TextView) findViewById(R.id.groupNumber);
+            teidenSpan = (TextView) findViewById(R.id.teidenSpan);
+        } else {
+            // 検索
+            groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
+            teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
+        }
+        if (groupNumber.getText().toString().equals("")
+                || groupNumber.getText().toString().equals(getString(R.string.address_loading))
+                || groupNumber.getText().toString().equals(getString(R.string.out_of_area))) {
+            Toast.makeText(this, R.string.please_show_result, Toast.LENGTH_LONG).show();
+        } else {
+            builder.append(groupNumber.getText())
+            .append("\n")
+            .append(teidenSpan.getText())
+            .append("\n\n")
+            .append(getString(R.string.cm_app));
+            intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.mail_subject));
+            intent.putExtra(Intent.EXTRA_TEXT, builder.toString());
+            startActivity(intent);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_top, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
 
 }

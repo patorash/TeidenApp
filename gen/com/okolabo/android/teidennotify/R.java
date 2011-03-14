@@ -43,13 +43,16 @@ public final class R {
         public static final int android_exception_service_id=0x7f050002;
         public static final int app_name=0x7f050000;
         public static final int app_name_top=0x7f050001;
+        public static final int cm_app=0x7f050014;
         public static final int current_address=0x7f050003;
         public static final int current_group=0x7f050007;
         public static final int dai=0x7f050008;
         public static final int finish=0x7f050010;
         public static final int group=0x7f050009;
         public static final int hint_edit_address=0x7f05000d;
+        public static final int mail_subject=0x7f050013;
         public static final int out_of_area=0x7f05000b;
+        public static final int please_show_result=0x7f050012;
         public static final int search=0x7f05000f;
         public static final int search_address=0x7f05000c;
         public static final int search_group=0x7f05000e;

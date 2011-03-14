@@ -18,4 +18,8 @@
     <string name="search">検索する</string>
     <string name="finish">終了</string>
     <string name="share">共有</string>
+    <string name="please_show_result">結果が表示されてから行って下さい</string>
+    <string name="mail_subject">計画停電情報</string>
+    <string name="cm_app">この情報はAndroidアプリ「計画停電情報」より送信しています。\n
+    https://market.android.com/details?id=com.okolabo.android.teidennotify</string>
 </resources>
