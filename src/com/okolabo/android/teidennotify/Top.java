@@ -211,7 +211,7 @@ public class Top extends Activity implements LocationListener{
             }
             String strAddress = builder.toString();
             // テスト
-//            strAddress = "東京都調布市小島町X丁目XX−X";
+            //strAddress = "東京都調布市小島町２丁目XX−X";
             currentAddress.setText(strAddress);
             
             // TODO 住所がどのエリアであるか照合する
@@ -290,7 +290,7 @@ public class Top extends Activity implements LocationListener{
             for (Element element : elementList) {
                 String newsBody = element.toString();
 //                Log.d("TeidenApp", newsBody);
-                String[] areas = newsBody.split("<br />");
+                String[] areas = newsBody.split("<br />|<br>");
                 for (int i = 1; i < areas.length; i++) {
                     String[] area = areas[i].trim().split("　");
                     if (area.length > 1) {
@@ -316,8 +316,11 @@ public class Top extends Activity implements LocationListener{
                         }
 //                        Log.d("TeidenApp", "areaNum = " + areaNum);
                         if (areaNum != null) {
-                            groups.add(Integer.valueOf(areaNum));
-                            areaMap.put(areaName, groups);
+                            int intAreaNum = Integer.valueOf(areaNum);
+                            if (!groups.contains(intAreaNum)) {
+                                groups.add(intAreaNum);
+                                areaMap.put(areaName, groups);
+                            }
                         }
                     }
                 }
@@ -418,10 +421,22 @@ public class Top extends Activity implements LocationListener{
             case R.id.menu_finish:
                 finish();
                 break;
+                
+            case R.id.menu_about_app:
+                about_app();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
     
+    /**
+     * このアプリについてを表示する
+     */
+    private void about_app() {
+        Intent intent = new Intent(this, About.class);
+        startActivity(intent);
+    }
+
     private void share() {
         StringBuilder builder = new StringBuilder();
         TextView groupNumber;

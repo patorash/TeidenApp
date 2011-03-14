@@ -22,4 +22,7 @@
     <string name="mail_subject">計画停電情報</string>
     <string name="cm_app">この情報はAndroidアプリ「計画停電情報」より送信しています。\n
     https://market.android.com/details?id=com.okolabo.android.teidennotify</string>
+    <string name="caution">※毎日新聞のサイトを参照してます。\n
+    取れなくなったらメニューのアプリについてから連絡お願いします。</string>
+    <string name="about_app">アプリについて</string>
 </resources>

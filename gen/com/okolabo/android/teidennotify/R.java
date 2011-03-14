@@ -18,31 +18,36 @@ public final class R {
         public static final int icon=0x7f020000;
     }
     public static final class id {
-        public static final int address=0x7f080007;
-        public static final int currentAddress=0x7f080002;
-        public static final int groupNumber=0x7f080003;
-        public static final int menu_finish=0x7f08000c;
-        public static final int menu_share=0x7f08000b;
-        public static final int pref=0x7f080006;
-        public static final int search=0x7f080008;
-        public static final int searchGroupNumber=0x7f080009;
-        public static final int searchTeidenSpan=0x7f08000a;
-        public static final int tab1=0x7f080001;
-        public static final int tab2=0x7f080005;
-        public static final int tabhost=0x7f080000;
-        public static final int teidenSpan=0x7f080004;
+        public static final int address=0x7f080008;
+        public static final int currentAddress=0x7f080003;
+        public static final int groupNumber=0x7f080004;
+        public static final int menu_about_app=0x7f08000d;
+        public static final int menu_finish=0x7f08000e;
+        public static final int menu_share=0x7f08000c;
+        public static final int pref=0x7f080007;
+        public static final int search=0x7f080009;
+        public static final int searchGroupNumber=0x7f08000a;
+        public static final int searchTeidenSpan=0x7f08000b;
+        public static final int tab1=0x7f080002;
+        public static final int tab2=0x7f080006;
+        public static final int tabhost=0x7f080001;
+        public static final int teidenSpan=0x7f080005;
+        public static final int webView=0x7f080000;
     }
     public static final class layout {
-        public static final int main=0x7f030000;
+        public static final int about=0x7f030000;
+        public static final int main=0x7f030001;
     }
     public static final class menu {
         public static final int menu_top=0x7f070000;
     }
     public static final class string {
+        public static final int about_app=0x7f050016;
         public static final int address_loading=0x7f050006;
         public static final int android_exception_service_id=0x7f050002;
         public static final int app_name=0x7f050000;
         public static final int app_name_top=0x7f050001;
+        public static final int caution=0x7f050015;
         public static final int cm_app=0x7f050014;
         public static final int current_address=0x7f050003;
         public static final int current_group=0x7f050007;
