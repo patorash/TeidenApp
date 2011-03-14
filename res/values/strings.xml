@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">計画停電情報</string>
+    <string name="app_name_top">計画停電\n情報</string>
     <string name="android_exception_service_id">pbTP05jKFN5FCNgqPc9I8F1SJhP7PDaEBLL88DIa</string>
     <string name="current_address">現在地：</string>
+    <string name="tab_current_address">現在地</string>
+    <string name="tab_search">地名検索</string>
     <string name="address_loading">取得中...</string>
     <string name="current_group">現在地のグループ：</string>
     <string name="dai">第</string>
     <string name="group">グループ</string>
     <string name="teiden_span">停電時間帯：</string>
     <string name="out_of_area">計画停電エリア外の住所です</string>
+    <string name="search_address">地名を指定：</string>
+    <string name="hint_edit_address">例：台東区下谷</string>
+    <string name="search_group">指定位置のグループ：</string>
+    <string name="search">検索する</string>
 </resources>

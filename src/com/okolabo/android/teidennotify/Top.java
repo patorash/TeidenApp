@@ -15,6 +15,7 @@ import jp.co.kayo.android.exceptionlib.ExceptionBinder;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.Source;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.location.Address;
 import android.location.Geocoder;
@@ -22,7 +23,16 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +52,11 @@ public class Top extends Activity implements LocationListener{
 
     /**  */
     protected Geocoder mGeocoder;
+    
+    
+    private Spinner mSpnPref;
+    
+    private EditText mEditAddress;
     
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
@@ -63,6 +78,41 @@ public class Top extends Activity implements LocationListener{
         ExceptionBinder.bind(this, getString(R.string.android_exception_service_id));
         mGeocoder = new Geocoder(getApplicationContext(), Locale.JAPAN);
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        
+        // タブを作成
+        TabHost tabs = (TabHost) findViewById(R.id.tabhost);
+        tabs.setup();
+        TabHost.TabSpec spec = tabs.newTabSpec("tag1");
+        spec.setContent(R.id.tab1);
+        spec.setIndicator(getString(R.string.tab_current_address));
+        tabs.addTab(spec);
+        
+        spec = tabs.newTabSpec("tag2");
+        spec.setContent(R.id.tab2);
+        spec.setIndicator(getString(R.string.tab_search));
+        tabs.addTab(spec);
+        
+        // スピナー
+        mSpnPref = (Spinner) findViewById(R.id.pref);
+        ArrayAdapter<String> aa = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_spinner_item,
+                getResources().getStringArray(R.array.prefs));
+        aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpnPref.setAdapter(aa);
+        
+        // テキスト
+        mEditAddress = (EditText) findViewById(R.id.address);
+        
+        // 検索ボタン
+        Button btnSearch = (Button) findViewById(R.id.search);
+        btnSearch.setOnClickListener(new OnClickListener() {
+            
+            public void onClick(View v) {
+                // 非同期で検索
+                new SearchAsyncTask().execute();
+            }
+        });
     }
 
     @Override
@@ -156,7 +206,7 @@ public class Top extends Activity implements LocationListener{
             }
             String strAddress = builder.toString();
             // テスト
-            // strAddress = "神奈川県秦野市今川町";
+//            strAddress = "東京都調布市小島町X丁目XX−X";
             currentAddress.setText(strAddress);
             
             // TODO 住所がどのエリアであるか照合する
@@ -177,11 +227,13 @@ public class Top extends Activity implements LocationListener{
                 teidenSpan.setText(R.string.out_of_area);
             } else {
                 Iterator<String> iterator = areaMap.keySet().iterator();
+                boolean hit_flg = false;
                 while (iterator.hasNext()) {
                     String areaName = (String) iterator.next();
                     Pattern pattern = Pattern.compile(areaName);
                     Matcher matcher = pattern.matcher(strAddress);
                     if (matcher.find()) {
+                        hit_flg = true;
                         ArrayList<Integer> groups = areaMap.get(areaName);
                         StringBuilder groupBuilder = new StringBuilder();
                         StringBuilder teidenBuilder = new StringBuilder();
@@ -193,6 +245,11 @@ public class Top extends Activity implements LocationListener{
                         teidenSpan.setText(teidenBuilder.toString());
                         break;
                     }
+                }
+                if (!hit_flg) {
+                    // エリア外の住所
+                    groupNumber.setText(R.string.out_of_area);
+                    teidenSpan.setText(R.string.out_of_area);
                 }
             }
             
@@ -227,9 +284,10 @@ public class Top extends Activity implements LocationListener{
 //          List<Element> elementList=source.getAllElements();
             for (Element element : elementList) {
                 String newsBody = element.toString();
-                String[] areas = newsBody.split("<br />\n");
+//                Log.d("TeidenApp", newsBody);
+                String[] areas = newsBody.split("<br />");
                 for (int i = 1; i < areas.length; i++) {
-                    String[] area = areas[i].split("　");
+                    String[] area = areas[i].trim().split("　");
                     if (area.length > 1) {
                         String[] areaNames = area[0].split(" ");
                         StringBuilder areaNameBuilder = new StringBuilder();
@@ -243,7 +301,11 @@ public class Top extends Activity implements LocationListener{
                         } else {
                             groups = new ArrayList<Integer>();
                         }
-                        groups.add(Integer.valueOf(area[1]));
+                        area[1] = zenkakuToHankaku(area[1]);
+                        Log.d("TeidenApp", area[1]);
+                        String[] areaNums = area[1].split("\r\n|\r|\n|</div>");
+                        String areaNum = areaNums[0];
+                        groups.add(Integer.valueOf(areaNum));
                         areaMap.put(areaName, groups);
                     }
                 }
@@ -256,5 +318,80 @@ public class Top extends Activity implements LocationListener{
             e.printStackTrace();
         }
        return areaMap;
+    }
+    
+    /**
+     * 非同期で検索する
+     * @author Toyoaki Oko <chariderpato@gmail.com>
+     *
+     */
+    private class SearchAsyncTask extends AsyncTask<Void, Void, HashMap<String, ArrayList<Integer>>> {
+
+        ProgressDialog mProgress;
+        
+        @Override
+        protected HashMap<String, ArrayList<Integer>> doInBackground(Void... params) {
+            String pref = (String) mSpnPref.getSelectedItem();
+            return getTeidenInfo(TEIDEN_URL_LIST.get(pref));
+        }
+
+        @Override
+        protected void onPostExecute(HashMap<String, ArrayList<Integer>> areaMap) {
+            TextView groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
+            TextView teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
+            String pref = (String) mSpnPref.getSelectedItem();
+            String address = mEditAddress.getText().toString();
+            String strAddress = pref + address;
+            boolean hit_flg = false;
+            Iterator<String> iterator = areaMap.keySet().iterator();
+            while (iterator.hasNext()) {
+                String areaName = (String) iterator.next();
+                Pattern pattern = Pattern.compile(areaName);
+                Matcher matcher = pattern.matcher(strAddress);
+                if (matcher.find()) {
+                    hit_flg = true;
+                    ArrayList<Integer> groups = areaMap.get(areaName);
+                    StringBuilder groupBuilder = new StringBuilder();
+                    StringBuilder teidenBuilder = new StringBuilder();
+                    for (Integer group : groups) {
+                        groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
+                        teidenBuilder.append(getResources().getStringArray(R.array.teiden_group)[group - 1] + "\n");
+                    }
+                    groupNumber.setText(groupBuilder.toString());
+                    teidenSpan.setText(teidenBuilder.toString());
+                    break;
+                }
+            }
+            if (!hit_flg) {
+                // エリア外の住所
+                groupNumber.setText(R.string.out_of_area);
+                teidenSpan.setText(R.string.out_of_area);
+            }
+            mProgress.dismiss();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // プログレスダイアログ表示
+            mProgress = new ProgressDialog(Top.this);
+            mProgress.setMessage(getString(R.string.address_loading));
+            mProgress.setIcon(android.R.drawable.ic_dialog_info);
+            mProgress.setIndeterminate(false);
+            mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgress.show();
+        }
+
+    }
+    
+    private String zenkakuToHankaku(String value) {
+        StringBuilder sb = new StringBuilder(value);
+        for (int i = 0; i < sb.length(); i++) {
+            int c = (int) sb.charAt(i);
+            if ((c >= 0xFF10 && c <= 0xFF19) || (c >= 0xFF21 && c <= 0xFF3A) || (c >= 0xFF41 && c <= 0xFF5A)) {
+                sb.setCharAt(i, (char) (c - 0xFEE0));
+            }
+        }
+        value = sb.toString();
+        return value;
     }
 }
