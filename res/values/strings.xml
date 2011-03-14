@@ -16,4 +16,6 @@
     <string name="hint_edit_address">例：台東区下谷</string>
     <string name="search_group">指定位置のグループ：</string>
     <string name="search">検索する</string>
+    <string name="finish">終了</string>
+    <string name="share">共有</string>
 </resources>

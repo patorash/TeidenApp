@@ -25,7 +25,6 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -302,11 +301,18 @@ public class Top extends Activity implements LocationListener{
                             groups = new ArrayList<Integer>();
                         }
                         area[1] = zenkakuToHankaku(area[1]);
-                        Log.d("TeidenApp", area[1]);
-                        String[] areaNums = area[1].split("\r\n|\r|\n|</div>");
-                        String areaNum = areaNums[0];
-                        groups.add(Integer.valueOf(areaNum));
-                        areaMap.put(areaName, groups);
+//                        Log.d("TeidenApp", area[1]);
+                        String areaNum = null;
+                        Pattern pattern = Pattern.compile("\\d+");
+                        Matcher matcher = pattern.matcher(area[1]);
+                        if (matcher.find()) {
+                            areaNum = matcher.group();
+                        }
+//                        Log.d("TeidenApp", "areaNum = " + areaNum);
+                        if (areaNum != null) {
+                            groups.add(Integer.valueOf(areaNum));
+                            areaMap.put(areaName, groups);
+                        }
                     }
                 }
             }
@@ -394,4 +400,32 @@ public class Top extends Activity implements LocationListener{
         value = sb.toString();
         return value;
     }
+    
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//            case R.id.menu_share:
+//                // 検索候補のクリア
+//                share();
+//                break;
+//                
+//            case R.id.menu_finish:
+//                finish();
+//                break;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
+//    
+//    private void share() {
+//        // TODO 自動生成されたメソッド・スタブ
+//        
+//    }
+//
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.menu_top, menu);
+//        return super.onCreateOptionsMenu(menu);
+//    }
+
 }
