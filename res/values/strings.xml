@@ -22,7 +22,10 @@
     <string name="mail_subject">計画停電情報</string>
     <string name="cm_app">この情報はAndroidアプリ「計画停電情報」より送信しています。\n
     https://market.android.com/details?id=com.okolabo.android.teidennotify</string>
-    <string name="caution">※毎日新聞のサイトを参照してます。\n
+    <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。多少時間はかかります。
+    ※毎日新聞のサイトを参照してます。
+    取れなくなったらメニューのアプリについてから連絡お願いします。</string>
+    <string name="caution_search">丁目まで入力。丁目は数字で。※毎日新聞のサイトを参照してます。
     取れなくなったらメニューのアプリについてから連絡お願いします。</string>
     <string name="about_app">アプリについて</string>
     <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。</string>

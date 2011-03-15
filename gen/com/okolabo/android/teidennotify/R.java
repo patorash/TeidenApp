@@ -49,12 +49,13 @@ public final class R {
         public static final int menu_top=0x7f070000;
     }
     public static final class string {
-        public static final int about_app=0x7f050016;
+        public static final int about_app=0x7f050017;
         public static final int address_loading=0x7f050006;
         public static final int android_exception_service_id=0x7f050002;
         public static final int app_name=0x7f050000;
         public static final int app_name_top=0x7f050001;
-        public static final int caution=0x7f050015;
+        public static final int caution_gps=0x7f050015;
+        public static final int caution_search=0x7f050016;
         public static final int cm_app=0x7f050014;
         public static final int current_address=0x7f050003;
         public static final int current_group=0x7f050007;
@@ -72,7 +73,7 @@ public final class R {
         public static final int tab_current_address=0x7f050004;
         public static final int tab_search=0x7f050005;
         public static final int teiden_span=0x7f05000a;
-        public static final int teiden_span_unknown=0x7f050017;
+        public static final int teiden_span_unknown=0x7f050018;
     }
     public static final class style {
         public static final int HeadLineStyle=0x7f060000;

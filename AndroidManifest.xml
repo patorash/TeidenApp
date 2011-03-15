@@ -10,8 +10,8 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="9"
-    android:versionName="1.2.2"
+    android:versionCode="10"
+    android:versionName="1.2.3"
     android:installLocation="preferExternal">
     <application
         android:icon="@drawable/icon"

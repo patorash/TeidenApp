@@ -33,7 +33,7 @@
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/caution"
+                        android:text="@string/caution_gps"
                         style="@style/Text"
                     />
                     <TextView
@@ -89,7 +89,7 @@
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/caution"
+                        android:text="@string/caution_search"
                         style="@style/Text"
                     />
                     <TextView
