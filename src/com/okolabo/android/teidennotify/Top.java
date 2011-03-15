@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -63,6 +64,12 @@ public class Top extends Activity implements LocationListener{
     
     private TabHost mTabs;
     
+    private Calendar mCalendar;
+    
+    private int mMonth;
+    
+    private int mDay;
+    
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
         TEIDEN_URL_LIST.put("東京都", "http://mainichi.jp/select/weathernews/20110311/mai/keikakuteiden/tokyo.html");
@@ -83,6 +90,9 @@ public class Top extends Activity implements LocationListener{
         ExceptionBinder.bind(this, getString(R.string.android_exception_service_id));
         mGeocoder = new Geocoder(getApplicationContext(), Locale.JAPAN);
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        mCalendar = Calendar.getInstance();
+        mMonth = mCalendar.get(Calendar.MONTH) + 1;
+        mDay = mCalendar.get(Calendar.DATE);
         
         // タブを作成
         mTabs = (TabHost) findViewById(R.id.tabhost);
@@ -244,10 +254,37 @@ public class Top extends Activity implements LocationListener{
                         StringBuilder teidenBuilder = new StringBuilder();
                         for (Integer group : groups) {
                             groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                            teidenBuilder.append(getResources().getStringArray(R.array.teiden_group)[group - 1] + "\n");
+                            // 日付によってグループの停電時刻が変わるのに対応する！
+                            String teidenGroupSpan = "";
+                            switch (mMonth) {
+                                case 3:
+                                    switch (mDay) {
+                                        case 15:
+                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
+                                            break;
+                                            
+                                        case 16:
+                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
+                                            break;
+                                            
+                                        case 17:
+                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
+                                            break;
+                                            
+                                        case 18:
+                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
+                                            break;
+                                    }
+                                    break;
+                            }
+                            teidenBuilder.append(teidenGroupSpan + "\n");
                         }
                         groupNumber.setText(groupBuilder.toString());
-                        teidenSpan.setText(teidenBuilder.toString());
+                        if (teidenBuilder.toString().equals("")) {
+                            teidenSpan.setText(R.string.teiden_span_unknown);
+                        } else {
+                            teidenSpan.setText(teidenBuilder.toString());
+                        }
                         break;
                     }
                 }
@@ -300,6 +337,8 @@ public class Top extends Activity implements LocationListener{
                             areaNameBuilder.append(areaName);
                         }
                         String areaName = areaNameBuilder.toString();
+                        // areaName から「大字」を除去する
+                        areaName = areaName.replaceAll("大字", "");
                         ArrayList<Integer> groups;
                         if (areaMap.containsKey(areaName)) {
                             groups = areaMap.get(areaName);
@@ -356,7 +395,7 @@ public class Top extends Activity implements LocationListener{
             TextView teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
             String pref = (String) mSpnPref.getSelectedItem();
             String address = mEditAddress.getText().toString();
-            String strAddress = pref + address;
+            String strAddress = pref + hankakuToZenkaku(address);
             boolean hit_flg = false;
             Iterator<String> iterator = areaMap.keySet().iterator();
             while (iterator.hasNext()) {
@@ -370,10 +409,37 @@ public class Top extends Activity implements LocationListener{
                     StringBuilder teidenBuilder = new StringBuilder();
                     for (Integer group : groups) {
                         groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                        teidenBuilder.append(getResources().getStringArray(R.array.teiden_group)[group - 1] + "\n");
+                        // 日付によってグループの停電時刻が変わるのに対応する！
+                        String teidenGroupSpan = "";
+                        switch (mMonth) {
+                            case 3:
+                                switch (mDay) {
+                                    case 15:
+                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
+                                        break;
+                                        
+                                    case 16:
+                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
+                                        break;
+                                        
+                                    case 17:
+                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
+                                        break;
+                                        
+                                    case 18:
+                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
+                                        break;
+                                }
+                                break;
+                        }
+                        teidenBuilder.append(teidenGroupSpan + "\n");
                     }
                     groupNumber.setText(groupBuilder.toString());
-                    teidenSpan.setText(teidenBuilder.toString());
+                    if (teidenBuilder.toString().equals("")) {
+                        teidenSpan.setText(R.string.teiden_span_unknown);
+                    } else {
+                        teidenSpan.setText(teidenBuilder.toString());
+                    }
                     break;
                 }
             }
@@ -398,12 +464,34 @@ public class Top extends Activity implements LocationListener{
 
     }
     
+    /**
+     * 全角を半角に変換
+     * @param value
+     * @return
+     */
     private String zenkakuToHankaku(String value) {
         StringBuilder sb = new StringBuilder(value);
         for (int i = 0; i < sb.length(); i++) {
             int c = (int) sb.charAt(i);
             if ((c >= 0xFF10 && c <= 0xFF19) || (c >= 0xFF21 && c <= 0xFF3A) || (c >= 0xFF41 && c <= 0xFF5A)) {
                 sb.setCharAt(i, (char) (c - 0xFEE0));
+            }
+        }
+        value = sb.toString();
+        return value;
+    }
+    
+    /**
+     * 半角を全角に変換
+     * @param value
+     * @return
+     */
+    private String hankakuToZenkaku(String value) {
+        StringBuilder sb = new StringBuilder(value);
+        for (int i = 0; i < sb.length(); i++) {
+            int c = (int) sb.charAt(i);
+            if ((c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A)) {
+                sb.setCharAt(i, (char) (c + 0xFEE0));
             }
         }
         value = sb.toString();
@@ -437,6 +525,9 @@ public class Top extends Activity implements LocationListener{
         startActivity(intent);
     }
 
+    /**
+     * 共有機能
+     */
     private void share() {
         StringBuilder builder = new StringBuilder();
         TextView groupNumber;

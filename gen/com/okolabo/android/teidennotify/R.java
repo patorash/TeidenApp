@@ -9,8 +9,15 @@ package com.okolabo.android.teidennotify;
 
 public final class R {
     public static final class array {
-        public static final int prefs=0x7f040001;
+        public static final int prefs=0x7f040005;
         public static final int teiden_group=0x7f040000;
+        /**  以降、日付によってグループの時間が変わるので、それを参照するよう修正 
+ http://mainichi.jp/select/weathernews/news/20110314mog00m040022000c.html 
+         */
+        public static final int teiden_group_3_15=0x7f040001;
+        public static final int teiden_group_3_16=0x7f040002;
+        public static final int teiden_group_3_17=0x7f040003;
+        public static final int teiden_group_3_18=0x7f040004;
     }
     public static final class attr {
     }
@@ -65,6 +72,7 @@ public final class R {
         public static final int tab_current_address=0x7f050004;
         public static final int tab_search=0x7f050005;
         public static final int teiden_span=0x7f05000a;
+        public static final int teiden_span_unknown=0x7f050017;
     }
     public static final class style {
         public static final int HeadLineStyle=0x7f060000;
