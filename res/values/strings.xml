@@ -6,7 +6,9 @@
     <string name="current_address">現在地：</string>
     <string name="tab_current_address">現在地</string>
     <string name="tab_search">地名検索</string>
-    <string name="address_loading">取得中...</string>
+    <string name="address_loading">データ取得中...</string>
+    <string name="now_location_loading">...現在地を取得中...</string>
+    <string name="data_loading">現在地が取れました。\nデータを取得中...</string>
     <string name="current_group">現在地のグループ：</string>
     <string name="dai">第</string>
     <string name="group">グループ</string>
@@ -28,5 +30,8 @@
     <string name="caution_search">丁目まで入力。丁目は数字で。※毎日新聞のサイトを参照してます。
     取れなくなったらメニューのアプリについてから連絡お願いします。</string>
     <string name="about_app">アプリについて</string>
+    <string name="get_my_location">現在地を取得</string>
     <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。</string>
+    <string name="month">月</string>
+    <string name="day">日の予定</string>
 </resources>

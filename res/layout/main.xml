@@ -36,6 +36,13 @@
                         android:text="@string/caution_gps"
                         style="@style/Text"
                     />
+                    <Button
+                        android:id="@+id/btnGetMyLocation"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/get_my_location"
+                        android:onClick="getMyLocation"
+                    />
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
@@ -46,7 +53,6 @@
                         android:id="@+id/currentAddress"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/address_loading"
                         style="@style/Text"
                     />
                     <TextView
@@ -71,7 +77,6 @@
                         android:id="@+id/teidenSpan"
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/address_loading"
                         style="@style/Text"
                     />
                 </LinearLayout>

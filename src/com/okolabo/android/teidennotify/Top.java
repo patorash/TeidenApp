@@ -42,6 +42,9 @@ import android.widget.Toast;
 
 public class Top extends Activity implements LocationListener{
     
+    private static final int TEIDEN_LOCATION = 1;
+    private static final int TEIDEN_SEARCH = 2;
+    
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
     
@@ -90,6 +93,8 @@ public class Top extends Activity implements LocationListener{
         ExceptionBinder.bind(this, getString(R.string.android_exception_service_id));
         mGeocoder = new Geocoder(getApplicationContext(), Locale.JAPAN);
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        
+        // グループと停電時間が日ごとに変わるので、日付を取得しとく
         mCalendar = Calendar.getInstance();
         mMonth = mCalendar.get(Calendar.MONTH) + 1;
         mDay = mCalendar.get(Calendar.DATE);
@@ -125,7 +130,9 @@ public class Top extends Activity implements LocationListener{
             
             public void onClick(View v) {
                 // 非同期で検索
-                new SearchAsyncTask().execute();
+                // スピナーから都道府県を取得
+                String pref = (String)mSpnPref.getSelectedItem();
+                new SearchAsyncTask(TEIDEN_SEARCH, null).execute(pref);
             }
         });
     }
@@ -136,28 +143,6 @@ public class Top extends Activity implements LocationListener{
         // GPSのリスナーを解除
         if (mLocationManager != null) {
             mLocationManager.removeUpdates(this);
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // GPSのリスナーを登録
-        mLocationProvider = null;   // 一旦初期化
-        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            mLocationProvider = mLocationManager.getProvider(LocationManager.GPS_PROVIDER);
-        } else if(mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            mLocationProvider = mLocationManager.getProvider(LocationManager.NETWORK_PROVIDER);
-        } else {
-            // SIMなし、かつ、GPSがOFF
-            noProviderEnabled();
-        }
-        if (mLocationProvider != null) {
-            mLocationManager.requestLocationUpdates(
-                    mLocationProvider.getName(),
-                    0,
-                    0,
-                    this);
         }
     }
 
@@ -207,10 +192,8 @@ public class Top extends Activity implements LocationListener{
      * 位置情報が取得できたので処理を行う
      */
     private void gpsLocationChanged() {
-        // TODO 位置情報を住所に変換
+        // 位置情報を住所に変換
         TextView currentAddress = (TextView) findViewById(R.id.currentAddress);
-        TextView groupNumber = (TextView) findViewById(R.id.groupNumber);
-        TextView teidenSpan = (TextView) findViewById(R.id.teidenSpan);
         try {
             List<Address> list_address = mGeocoder.getFromLocation(mLocation.getLatitude(), mLocation.getLongitude(), 10);
             Address address = list_address.get(0);
@@ -220,82 +203,36 @@ public class Top extends Activity implements LocationListener{
                 builder.append(buf);
             }
             String strAddress = builder.toString();
-            // テスト
-            //strAddress = "東京都調布市小島町２丁目XX−X";
+            // TODO テストの際に使う
+            // 一つ
+//            strAddress = "東京都調布市小島町２丁目XX−X";
+            // 複数
+//            strAddress = "神奈川県相模原市南区相南１丁目";
             currentAddress.setText(strAddress);
             
-            // TODO 住所がどのエリアであるか照合する
+            // 住所がどのエリアであるか照合する
             Iterator<String> prefIterator = TEIDEN_URL_LIST.keySet().iterator();
-            HashMap<String, ArrayList<Integer>> areaMap = new HashMap<String, ArrayList<Integer>>();
+            String hitPref = null;
             while (prefIterator.hasNext()) {
                 String pref = (String) prefIterator.next();
                 Pattern pattern = Pattern.compile(pref);
                 Matcher matcher = pattern.matcher(strAddress);
                 if (matcher.find()) {
-                    areaMap = getTeidenInfo(TEIDEN_URL_LIST.get(pref));
+                    hitPref = pref;
                     break;
                 }
             }
-            if (areaMap.isEmpty()) {
-                // エリア外の住所
-                groupNumber.setText(R.string.out_of_area);
-                teidenSpan.setText(R.string.out_of_area);
+            if (hitPref != null) {
+                // 非同期でデータを取得
+                new SearchAsyncTask(TEIDEN_LOCATION, strAddress).execute(hitPref);
             } else {
-                Iterator<String> iterator = areaMap.keySet().iterator();
-                boolean hit_flg = false;
-                while (iterator.hasNext()) {
-                    String areaName = (String) iterator.next();
-                    Pattern pattern = Pattern.compile(areaName);
-                    Matcher matcher = pattern.matcher(strAddress);
-                    if (matcher.find()) {
-                        hit_flg = true;
-                        ArrayList<Integer> groups = areaMap.get(areaName);
-                        StringBuilder groupBuilder = new StringBuilder();
-                        StringBuilder teidenBuilder = new StringBuilder();
-                        for (Integer group : groups) {
-                            groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                            // 日付によってグループの停電時刻が変わるのに対応する！
-                            String teidenGroupSpan = "";
-                            switch (mMonth) {
-                                case 3:
-                                    switch (mDay) {
-                                        case 15:
-                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
-                                            break;
-                                            
-                                        case 16:
-                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
-                                            break;
-                                            
-                                        case 17:
-                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
-                                            break;
-                                            
-                                        case 18:
-                                            teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
-                                            break;
-                                    }
-                                    break;
-                            }
-                            teidenBuilder.append(teidenGroupSpan + "\n");
-                        }
-                        groupNumber.setText(groupBuilder.toString());
-                        if (teidenBuilder.toString().equals("")) {
-                            teidenSpan.setText(R.string.teiden_span_unknown);
-                        } else {
-                            teidenSpan.setText(teidenBuilder.toString());
-                        }
-                        break;
-                    }
-                }
-                if (!hit_flg) {
-                    // エリア外の住所
-                    groupNumber.setText(R.string.out_of_area);
-                    teidenSpan.setText(R.string.out_of_area);
-                }
+                // 対象の都道府県以外なので、計画停電エリア外と表示
+                Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+                btnGetMyLocation.setEnabled(true);
+                btnGetMyLocation.setText(R.string.get_my_location);
+                ((TextView) findViewById(R.id.groupNumber)).setText(R.string.out_of_area);
+                ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.out_of_area);
             }
-            
-            // TODO エリアの停電時間を渡す。できればGoogleカレンダーに登録
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -339,6 +276,8 @@ public class Top extends Activity implements LocationListener{
                         String areaName = areaNameBuilder.toString();
                         // areaName から「大字」を除去する
                         areaName = areaName.replaceAll("大字", "");
+                        // areaName から「の一部」を除去する
+                        areaName = areaName.replaceAll("の一部", "");
                         ArrayList<Integer> groups;
                         if (areaMap.containsKey(areaName)) {
                             groups = areaMap.get(areaName);
@@ -348,13 +287,16 @@ public class Top extends Activity implements LocationListener{
                         area[1] = zenkakuToHankaku(area[1]);
 //                        Log.d("TeidenApp", area[1]);
                         String areaNum = null;
-                        Pattern pattern = Pattern.compile("\\d+");
+                        Pattern pattern = Pattern.compile("\\d");
                         Matcher matcher = pattern.matcher(area[1]);
                         if (matcher.find()) {
                             areaNum = matcher.group();
                         }
 //                        Log.d("TeidenApp", "areaNum = " + areaNum);
                         if (areaNum != null) {
+                            // 念を押して、<br>を削除するようにした
+                            areaNum = areaNum.replace("<br>", "");
+                            areaNum = areaNum.replace("<br />", "");
                             int intAreaNum = Integer.valueOf(areaNum);
                             if (!groups.contains(intAreaNum)) {
                                 groups.add(intAreaNum);
@@ -376,86 +318,205 @@ public class Top extends Activity implements LocationListener{
     
     /**
      * 非同期で検索する
-     * @author Toyoaki Oko <chariderpato@gmail.com>
      *
      */
-    private class SearchAsyncTask extends AsyncTask<Void, Void, HashMap<String, ArrayList<Integer>>> {
+    private class SearchAsyncTask extends AsyncTask<String, Void, HashMap<String, ArrayList<Integer>>> {
 
-        ProgressDialog mProgress;
+        private ProgressDialog mProgress;
+        private int mMode;
+        private String mStrAddress;
+        
+        public SearchAsyncTask(int mode, String strAddress) {
+            mMode = mode;
+            mStrAddress = strAddress;
+        }
         
         @Override
-        protected HashMap<String, ArrayList<Integer>> doInBackground(Void... params) {
-            String pref = (String) mSpnPref.getSelectedItem();
+        protected HashMap<String, ArrayList<Integer>> doInBackground(String... params) {
+            String pref = params[0];
             return getTeidenInfo(TEIDEN_URL_LIST.get(pref));
         }
 
         @Override
         protected void onPostExecute(HashMap<String, ArrayList<Integer>> areaMap) {
-            TextView groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
-            TextView teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
-            String pref = (String) mSpnPref.getSelectedItem();
-            String address = mEditAddress.getText().toString();
-            String strAddress = pref + hankakuToZenkaku(address);
+            TextView groupNumber = null;
+            TextView teidenSpan = null;
+            switch (mMode) {
+                case TEIDEN_LOCATION:
+                    groupNumber = (TextView) findViewById(R.id.groupNumber);
+                    teidenSpan = (TextView) findViewById(R.id.teidenSpan);
+                    Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+                    btnGetMyLocation.setEnabled(true);
+                    btnGetMyLocation.setText(R.string.get_my_location);
+                    break;
+                    
+                case TEIDEN_SEARCH:
+                    groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
+                    teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
+                    // フォームから住所を取得
+                    String pref = (String) mSpnPref.getSelectedItem();
+                    String address = mEditAddress.getText().toString();
+                    // 半角英数を全角英数へ
+                    mStrAddress = pref + hankakuToZenkaku(address);
+                    break;
+            }
+            
             boolean hit_flg = false;
             Iterator<String> iterator = areaMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String areaName = (String) iterator.next();
                 Pattern pattern = Pattern.compile(areaName);
-                Matcher matcher = pattern.matcher(strAddress);
+                Matcher matcher = pattern.matcher(mStrAddress);
                 if (matcher.find()) {
                     hit_flg = true;
                     ArrayList<Integer> groups = areaMap.get(areaName);
                     StringBuilder groupBuilder = new StringBuilder();
                     StringBuilder teidenBuilder = new StringBuilder();
+//                    for (Integer group : groups) {
+//                        // グループ情報を記述
+//                        groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
+//                        
+//                        // 日付によってグループの停電時刻が変わるのに対応する！
+//                        String teidenGroupSpan = "";
+//                        switch (mMonth) {
+//                            case 3:
+//                                switch (mDay) {
+//                                    case 15:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
+//                                        break;
+//                                        
+//                                    case 16:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
+//                                        break;
+//                                        
+//                                    case 17:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
+//                                        break;
+//                                        
+//                                    case 18:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
+//                                        break;
+//                                        
+//                                    case 19:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_19)[group - 1];
+//                                        break;
+//                                        
+//                                    case 20:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_20)[group - 1];
+//                                        break;
+//                                        
+//                                    case 21:
+//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_21)[group - 1];
+//                                        break;
+//                                }
+//                                break;
+//                        }
+//                        teidenBuilder.append(teidenGroupSpan + "\n");
+//                    }
                     for (Integer group : groups) {
+                        // グループ情報を記述
                         groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                        // 日付によってグループの停電時刻が変わるのに対応する！
-                        String teidenGroupSpan = "";
-                        switch (mMonth) {
-                            case 3:
-                                switch (mDay) {
-                                    case 15:
-                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
-                                        break;
-                                        
-                                    case 16:
-                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
-                                        break;
-                                        
-                                    case 17:
-                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
-                                        break;
-                                        
-                                    case 18:
-                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
-                                        break;
-                                }
-                                break;
-                        }
-                        teidenBuilder.append(teidenGroupSpan + "\n");
                     }
-                    groupNumber.setText(groupBuilder.toString());
-                    if (teidenBuilder.toString().equals("")) {
-                        teidenSpan.setText(R.string.teiden_span_unknown);
-                    } else {
-                        teidenSpan.setText(teidenBuilder.toString());
+                    for (int day = mDay; day <= 21; day++) {
+                        teidenBuilder.append("" + mMonth + getString(R.string.month) + day + getString(R.string.day) + "\n");
+                        for (Integer group : groups) {
+                            // 日付によってグループの停電時刻が変わるのに対応する！
+                            String teidenGroupSpan = "";
+                            switch (day) {
+                                case 15:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
+                                    break;
+                                    
+                                case 16:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
+                                    break;
+                                    
+                                case 17:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
+                                    break;
+                                    
+                                case 18:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
+                                    break;
+                                    
+                                case 19:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_19)[group - 1];
+                                    break;
+                                    
+                                case 20:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_20)[group - 1];
+                                    break;
+                                    
+                                case 21:
+                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_21)[group - 1];
+                                    break;
+                            }
+                            // グループ名を前に記述
+                            teidenBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
+                            teidenBuilder.append(teidenGroupSpan + "\n");
+                        }
+                        teidenBuilder.append("\n");
+                    }
+                    if (groupNumber != null) {
+                        groupNumber.setText(groupBuilder.toString());
+                        if (teidenSpan != null) {
+                            if (teidenBuilder.toString().equals("")) {
+                                teidenSpan.setText(R.string.teiden_span_unknown);
+                            } else {
+                                teidenSpan.setText(teidenBuilder.toString());
+                            }
+                        }
                     }
                     break;
                 }
             }
             if (!hit_flg) {
                 // エリア外の住所
-                groupNumber.setText(R.string.out_of_area);
-                teidenSpan.setText(R.string.out_of_area);
+                if (groupNumber != null && teidenSpan != null) {
+                    groupNumber.setText(R.string.out_of_area);
+                    teidenSpan.setText(R.string.out_of_area);
+                }
             }
             mProgress.dismiss();
+        }
+
+        @Override
+        protected void onCancelled() {
+            TextView groupNumber = null;
+            TextView teidenSpan = null;
+            switch (mMode) {
+                case TEIDEN_LOCATION:
+                    groupNumber = (TextView) findViewById(R.id.groupNumber);
+                    teidenSpan = (TextView) findViewById(R.id.teidenSpan);
+                    ((Button) findViewById(R.id.btnGetMyLocation)).setEnabled(true);
+                    break;
+                    
+                case TEIDEN_SEARCH:
+                    groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
+                    teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
+                    break;
+            }
+            // エリア外の住所
+            if (groupNumber != null && teidenSpan != null) {
+                groupNumber.setText("");
+                teidenSpan.setText("");
+            }
+            super.onCancelled();
         }
 
         @Override
         protected void onPreExecute() {
             // プログレスダイアログ表示
             mProgress = new ProgressDialog(Top.this);
-            mProgress.setMessage(getString(R.string.address_loading));
+            switch(mMode) {
+                case TEIDEN_LOCATION:
+                    mProgress.setMessage(getString(R.string.data_loading));
+                    break;
+                    
+                case TEIDEN_SEARCH:
+                    mProgress.setMessage(getString(R.string.address_loading));
+                    break;
+            }
             mProgress.setIcon(android.R.drawable.ic_dialog_info);
             mProgress.setIndeterminate(false);
             mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -566,5 +627,38 @@ public class Top extends Activity implements LocationListener{
         inflater.inflate(R.menu.menu_top, menu);
         return super.onCreateOptionsMenu(menu);
     }
-
+    
+    /**
+     * 現在地を取得ボタンが押された場合の挙動
+     * @param v
+     */
+    public void getMyLocation(View v) {
+        // GPSのリスナーを登録
+        mLocationProvider = null;   // 一旦初期化
+        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            mLocationProvider = mLocationManager.getProvider(LocationManager.GPS_PROVIDER);
+        } else if(mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            mLocationProvider = mLocationManager.getProvider(LocationManager.NETWORK_PROVIDER);
+        } else {
+            // SIMなし、かつ、GPSがOFF
+            noProviderEnabled();
+        }
+        if (mLocationProvider != null) {
+            mLocationManager.requestLocationUpdates(
+                    mLocationProvider.getName(),
+                    0,
+                    0,
+                    this);
+        }
+        // 取得中に変更
+        Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+        btnGetMyLocation.setEnabled(false);
+        btnGetMyLocation.setText(R.string.now_location_loading);
+        ((TextView) findViewById(R.id.currentAddress)).setText(R.string.address_loading);
+        ((TextView) findViewById(R.id.groupNumber)).setText(R.string.address_loading);
+        ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.address_loading);
+        // 現在地取得中を表示
+//        new LocationAsyncTask().execute();
+    }
+    
 }
