@@ -13,4 +13,15 @@
         <item name="android:background">#000</item>
         <item name="android:paddingBottom">10dip</item>
     </style>
+    <style name="SearchDate">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">#000</item>
+        <item name="android:gravity">right</item>
+    </style>
+    <style name="HistoryText">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">#000</item>
+    </style>
 </resources>

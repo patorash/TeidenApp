@@ -81,6 +81,7 @@
                     />
                 </LinearLayout>
             </ScrollView>
+            <!-- 地域検索 -->
             <ScrollView
                 android:id="@+id/tab2"
                 android:layout_width="fill_parent"
@@ -150,6 +151,26 @@
                     />
                 </LinearLayout>
             </ScrollView>
+            <!-- 履歴 -->
+            <LinearLayout
+                android:id="@+id/tab3"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:orientation="vertical"
+                >
+                <Button
+                    android:text="@string/show_history"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="getHistory"
+                    />
+                <ListView
+                    android:id="@android:id/list"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                />
+            </LinearLayout>
         </FrameLayout>
     </LinearLayout>
 </TabHost>

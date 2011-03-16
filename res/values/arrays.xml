@@ -103,4 +103,9 @@
         <item>茨城県</item>
         <item>山梨県</item>
     </string-array>
+    <string-array name="dialog_menu_history">
+        <item>共有する</item>
+        <item>この履歴を削除</item>
+        <item>キャンセル</item>
+    </string-array>
 </resources>

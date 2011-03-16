@@ -3,6 +3,7 @@ package com.okolabo.android.teidennotify;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -16,9 +17,13 @@ import jp.co.kayo.android.exceptionlib.ExceptionBinder;
 import net.htmlparser.jericho.Element;
 import net.htmlparser.jericho.Source;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
+import android.database.Cursor;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -27,18 +32,26 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
+
+import com.okolabo.android.teidennotify.DatabaseHelper.Histories;
 
 public class Top extends Activity implements LocationListener{
     
@@ -71,7 +84,20 @@ public class Top extends Activity implements LocationListener{
     
     private int mMonth;
     
-    private int mDay;
+    /** 今日の日付(365日で) */
+    private int mCurrentDayOfYear;
+    
+    /** 計画停電がわかっている日付(365日で) */
+    private int mMaxKnownDayOfYear;
+    
+    /** DBHelper */
+    private DatabaseHelper mDBHelper;
+    
+    /** DBのCursor */
+    private Cursor mCursor;
+    
+    /** 検索履歴のApdater */
+    private HistoryAdapter mAdapter;
     
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
@@ -95,21 +121,39 @@ public class Top extends Activity implements LocationListener{
         mLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         
         // グループと停電時間が日ごとに変わるので、日付を取得しとく
+        // 今日の日付を保存
         mCalendar = Calendar.getInstance();
         mMonth = mCalendar.get(Calendar.MONTH) + 1;
-        mDay = mCalendar.get(Calendar.DATE);
+        // 今日の日付(365日で) 月が変わっても対応できるように。
+        mCurrentDayOfYear = mCalendar.get(Calendar.DAY_OF_YEAR);
+        
+        // 計画停電情報がわかっている日まで
+        mCalendar.set(Calendar.MONTH, mMonth - 1); // 3月
+        mCalendar.set(Calendar.DATE, 21);
+        mMaxKnownDayOfYear = mCalendar.get(Calendar.DAY_OF_YEAR);
+        
+        // DBHelperを生成
+        mDBHelper = new DatabaseHelper(this);
         
         // タブを作成
         mTabs = (TabHost) findViewById(R.id.tabhost);
         mTabs.setup();
+        // 現在地タブ
         TabHost.TabSpec spec = mTabs.newTabSpec("tag1");
         spec.setContent(R.id.tab1);
         spec.setIndicator(getString(R.string.tab_current_address));
         mTabs.addTab(spec);
         
+        // 地域検索タブ
         spec = mTabs.newTabSpec("tag2");
         spec.setContent(R.id.tab2);
         spec.setIndicator(getString(R.string.tab_search));
+        mTabs.addTab(spec);
+        
+        // 検索履歴タブ
+        spec = mTabs.newTabSpec("tag3");
+        spec.setContent(R.id.tab3);
+        spec.setIndicator(getString(R.string.tab_history));
         mTabs.addTab(spec);
         
         // スピナー
@@ -145,6 +189,12 @@ public class Top extends Activity implements LocationListener{
             mLocationManager.removeUpdates(this);
         }
     }
+    
+    @Override
+    protected void onDestroy() {
+        mDBHelper.close();
+        super.onDestroy();
+    }
 
     /**
      * 使えるプロバイダーがない
@@ -158,10 +208,6 @@ public class Top extends Activity implements LocationListener{
 
     public void onProviderEnabled(String provider) {} // 今回は実装しない
 
-    
-    /**
-     * 位置情報が取得できた
-     */
     public void onStatusChanged(String provider, int status, Bundle extras) {
         switch (status) {
             case LocationProvider.AVAILABLE:
@@ -179,6 +225,9 @@ public class Top extends Activity implements LocationListener{
         }
     }
 
+    /**
+     * 位置情報が取得できた
+     */
     public void onLocationChanged(Location location) {
         mLocation = location;
         if (location != null) {
@@ -203,10 +252,10 @@ public class Top extends Activity implements LocationListener{
                 builder.append(buf);
             }
             String strAddress = builder.toString();
-            // TODO テストの際に使う
-            // 一つ
+            // TODO テストの際に使う このTODOはテストのときにここを見つけるために付けてます。
+            // グループが1つの住所
 //            strAddress = "東京都調布市小島町２丁目XX−X";
-            // 複数
+            // グループが複数の住所
 //            strAddress = "神奈川県相模原市南区相南１丁目";
             currentAddress.setText(strAddress);
             
@@ -362,6 +411,7 @@ public class Top extends Activity implements LocationListener{
             }
             
             boolean hit_flg = false;
+            SimpleDateFormat fmt = new SimpleDateFormat("MM月dd日(E)");
             Iterator<String> iterator = areaMap.keySet().iterator();
             while (iterator.hasNext()) {
                 String areaName = (String) iterator.next();
@@ -372,53 +422,16 @@ public class Top extends Activity implements LocationListener{
                     ArrayList<Integer> groups = areaMap.get(areaName);
                     StringBuilder groupBuilder = new StringBuilder();
                     StringBuilder teidenBuilder = new StringBuilder();
-//                    for (Integer group : groups) {
-//                        // グループ情報を記述
-//                        groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
-//                        
-//                        // 日付によってグループの停電時刻が変わるのに対応する！
-//                        String teidenGroupSpan = "";
-//                        switch (mMonth) {
-//                            case 3:
-//                                switch (mDay) {
-//                                    case 15:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
-//                                        break;
-//                                        
-//                                    case 16:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
-//                                        break;
-//                                        
-//                                    case 17:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
-//                                        break;
-//                                        
-//                                    case 18:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
-//                                        break;
-//                                        
-//                                    case 19:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_19)[group - 1];
-//                                        break;
-//                                        
-//                                    case 20:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_20)[group - 1];
-//                                        break;
-//                                        
-//                                    case 21:
-//                                        teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_21)[group - 1];
-//                                        break;
-//                                }
-//                                break;
-//                        }
-//                        teidenBuilder.append(teidenGroupSpan + "\n");
-//                    }
                     for (Integer group : groups) {
                         // グループ情報を記述
                         groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
                     }
-                    for (int day = mDay; day <= 21; day++) {
-                        teidenBuilder.append("" + mMonth + getString(R.string.month) + day + getString(R.string.day) + "\n");
+                    
+                    for (int dayOfYear = mCurrentDayOfYear; dayOfYear <= mMaxKnownDayOfYear; dayOfYear++) {
+                        mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
+                        int day = mCalendar.get(Calendar.DATE);
+//                        teidenBuilder.append("" + mMonth + getString(R.string.month) + day + getString(R.string.day) + "\n");
+                        teidenBuilder.append(fmt.format(mCalendar.getTime()) + "\n");
                         for (Integer group : groups) {
                             // 日付によってグループの停電時刻が変わるのに対応する！
                             String teidenGroupSpan = "";
@@ -464,6 +477,12 @@ public class Top extends Activity implements LocationListener{
                                 teidenSpan.setText(R.string.teiden_span_unknown);
                             } else {
                                 teidenSpan.setText(teidenBuilder.toString());
+                                // TODO 履歴をDBに保存する
+                                mDBHelper.insertHistories(
+                                        groupBuilder.toString()
+                                        + "\n"
+                                        + teidenBuilder.toString()
+                                );
                             }
                         }
                     }
@@ -600,10 +619,14 @@ public class Top extends Activity implements LocationListener{
             // 現在地
             groupNumber = (TextView) findViewById(R.id.groupNumber);
             teidenSpan = (TextView) findViewById(R.id.teidenSpan);
-        } else {
+        } else if (current == "tag2") {
             // 検索
             groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
             teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
+        } else {
+            // 履歴
+            Toast.makeText(this, R.string.caution_select_row, Toast.LENGTH_SHORT).show();
+            return;
         }
         if (groupNumber.getText().toString().equals("")
                 || groupNumber.getText().toString().equals(getString(R.string.address_loading))
@@ -661,4 +684,102 @@ public class Top extends Activity implements LocationListener{
 //        new LocationAsyncTask().execute();
     }
     
+    /**
+     * 画面回転対策
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
+    /**
+     * 検索履歴を表示する
+     * @param v
+     */
+    public void getHistory(View v) {
+        ListView list = (ListView) findViewById(android.R.id.list);
+        mCursor = mDBHelper.getAll();
+        startManagingCursor(mCursor);
+        mAdapter = new HistoryAdapter(this, mCursor);
+        list.setAdapter(mAdapter);
+        list.setOnItemClickListener(new OnItemClickListener() {
+
+            public void onItemClick(AdapterView<?> parent, View c, int position, long id) {
+                mCursor.moveToPosition(position);
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+                        Top.this,
+                        android.R.layout.select_dialog_item,
+                        getResources().getStringArray(R.array.dialog_menu_history)
+                );
+                AlertDialog dialog = new AlertDialog.Builder(Top.this)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setAdapter(adapter, new DialogInterface.OnClickListener() {
+                        
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case 0:
+                                    // 共有
+                                    StringBuilder builder = new StringBuilder();
+                                    builder.append(mCursor.getString(mCursor.getColumnIndex(Histories.HISTORY)))
+                                    .append("\n\n")
+                                    .append(getString(R.string.cm_app));
+                                    Intent intent = new Intent(Intent.ACTION_SEND);
+                                    intent.setType("text/plain");
+                                    intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                                    intent.putExtra(Intent.EXTRA_TEXT, builder.toString());
+                                    startActivity(intent);
+                                    dialog.dismiss();
+                                    break;
+                                    
+                                case 1:
+                                    // 履歴の削除
+                                    long id = mCursor.getLong(mCursor.getColumnIndex(Histories.ID));
+                                    mDBHelper.delete(id);
+                                    mCursor = mDBHelper.getAll();
+                                    mAdapter.changeCursor(mCursor);
+                                    Toast.makeText(Top.this, R.string.delete_history, Toast.LENGTH_SHORT).show();
+                                    break;
+                                    
+                                case 2:
+                                    // キャンセル
+                                    dialog.dismiss();
+                                    break;
+                            }
+                        }
+                    }).create();
+                dialog.show();
+            }
+        });
+    }
+    
+    
+    /**
+     * 検索履歴用のカーソルアダプタ
+     */
+    private class HistoryAdapter extends CursorAdapter {
+
+        public HistoryAdapter(Context context, Cursor c) {
+            super(context, c);
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+            TextView txtHistroy = (TextView)view.findViewById(R.id.history);
+            TextView txtCreated = (TextView)view.findViewById(R.id.created);
+            
+            txtHistroy.setText(cursor.getString(cursor.getColumnIndex(Histories.HISTORY)));
+            txtCreated.setText(
+                    getString(R.string.search_date)
+                    + cursor.getString(cursor.getColumnIndex(Histories.CREATED))
+            );
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            LayoutInflater inflator = LayoutInflater.from(context);
+            View v = inflator.inflate(R.layout.row_history, parent, false);
+            bindView(v, context, cursor);
+            return v;
+        }
+    }
 }

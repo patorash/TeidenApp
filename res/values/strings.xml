@@ -6,6 +6,7 @@
     <string name="current_address">現在地：</string>
     <string name="tab_current_address">現在地</string>
     <string name="tab_search">地名検索</string>
+    <string name="tab_history">検索履歴</string>
     <string name="address_loading">データ取得中...</string>
     <string name="now_location_loading">...現在地を取得中...</string>
     <string name="data_loading">現在地が取れました。\nデータを取得中...</string>
@@ -34,4 +35,8 @@
     <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。</string>
     <string name="month">月</string>
     <string name="day">日の予定</string>
+    <string name="show_history">検索履歴を表示・更新</string>
+    <string name="search_date">検索実施時刻：</string>
+    <string name="delete_history">削除しました</string>
+    <string name="caution_select_row">履歴をタップしてください</string>
 </resources>
