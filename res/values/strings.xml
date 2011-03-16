@@ -28,7 +28,7 @@
     <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。多少時間はかかります。
     ※毎日新聞のサイトを参照してます。
     取れなくなったらメニューのアプリについてから連絡お願いします。</string>
-    <string name="caution_search">丁目まで入力。丁目は数字で。※毎日新聞のサイトを参照してます。
+    <string name="caution_search">「X丁目」まで入力。Xは数字。※毎日新聞のサイトを参照してます。
     取れなくなったらメニューのアプリについてから連絡お願いします。</string>
     <string name="about_app">アプリについて</string>
     <string name="get_my_location">現在地を取得</string>
@@ -39,4 +39,7 @@
     <string name="search_date">検索実施時刻：</string>
     <string name="delete_history">削除しました</string>
     <string name="caution_select_row">履歴をタップしてください</string>
+    <string name="select_input_history">入力履歴を選択</string>
+    <string name="failed_get_history">入力履歴の取得に失敗しました</string>
+    <string name="no_input_history">まだ入力履歴がありません</string>
 </resources>

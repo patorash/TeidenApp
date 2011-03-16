@@ -14,21 +14,34 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static String TAG = "DatabaseHelper";
 
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     private static final String DATABASE_NAME = "teiden_app.db";
 
     private SQLiteDatabase mDB;
 
-    /** Historis テーブル名 */
+    /** 検索履歴 テーブル名 */
     private static final String TBL_HISTORIES = "Historis";
 
+    /** 検索履歴 */
     interface Histories {
         public static final String ID = "_id";
 
         public static final String HISTORY = "history";
 
         public static final String CREATED = "created";
+    }
+    
+    private static final String TBL_INPUT_HISTRIES = "InputHistories";
+    
+    /** 入力履歴 */
+    interface InputHistories {
+        
+        public static final String ID = "_id";
+
+        public static final String PREF = "pref";
+
+        public static final String ADDRESS = "address";
     }
 
     public DatabaseHelper(Context context) {
@@ -46,10 +59,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + Histories.CREATED + " TEXT"
                 + ")"
                 );
+        // InputHistoriesテーブル
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TBL_INPUT_HISTRIES + " ("
+                + InputHistories.ID
+                + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + InputHistories.PREF + " TEXT,"
+                + InputHistories.ADDRESS + " TEXT"
+                + ")"
+                );
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int olderVersion, int newVersion) {
+        if (olderVersion < 2) {
+            // InputHistoriesテーブル
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TBL_INPUT_HISTRIES + " ("
+                    + InputHistories.ID
+                    + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + InputHistories.PREF + " TEXT,"
+                    + InputHistories.ADDRESS + " TEXT"
+                    + ")"
+                    );
+        }
     }
 
     public long insertHistories(String history) {
@@ -87,6 +118,52 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String.valueOf(id)
         };
         return mDB.delete(TBL_HISTORIES, where, placeHolder);
+    }
+    
+    //
+    // 以下、InputHistories
+    //
+    /**
+     * 入力履歴を保存する
+     * 
+     * @param pref 都道府県名
+     * @param address 都道府県以降の住所
+     */
+    public long insertInputHistories(String pref, String address) {
+        // インサート
+        ContentValues cv = new ContentValues();
+        cv.put(InputHistories.PREF, pref);
+        cv.put(InputHistories.ADDRESS, address);
+        long rowId = 0;
+        rowId = mDB.insert(TBL_INPUT_HISTRIES, null, cv);
+        if (rowId <= 0) {
+            Log.e(TAG, "Table: " + TBL_INPUT_HISTRIES + " INSERT ERROR!");
+        }
+        return rowId;
+    }
+
+    /** 入力履歴を全件取得 */
+    public Cursor getAllInputHistories() {
+        String orderBy = InputHistories.ID + " DESC";
+        return mDB.query(TBL_INPUT_HISTRIES, null, null, null, null, null, orderBy);
+    }
+    
+    /** 指定した入力履歴を取得 */
+    public Cursor getInputHistory(long id) {
+        String where = InputHistories.ID + " = ?";
+        String[] placeHolder = {
+            String.valueOf(id)
+        };
+        return mDB.query(TBL_INPUT_HISTRIES, null, where, placeHolder, null, null, null);
+    }
+
+    /** 入力履歴を消す */
+    public int deleteInputHistory(long id) {
+        String where = InputHistories.ID + " = ?";
+        String[] placeHolder = {
+            String.valueOf(id)
+        };
+        return mDB.delete(TBL_INPUT_HISTRIES, where, placeHolder);
     }
     
     @Override

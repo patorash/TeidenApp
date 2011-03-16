@@ -24,4 +24,12 @@
         <item name="android:textColor">#fff</item>
         <item name="android:background">#000</item>
     </style>
+    <style name="InputHistoryHeadLine">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">#00f</item>
+        <item name="android:paddingTop">5dip</item>
+        <item name="android:paddingBottom">5dip</item>
+        <item name="android:gravity">center</item>
+    </style>
 </resources>

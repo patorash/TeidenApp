@@ -52,11 +52,16 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.okolabo.android.teidennotify.DatabaseHelper.Histories;
+import com.okolabo.android.teidennotify.DatabaseHelper.InputHistories;
 
 public class Top extends Activity implements LocationListener{
     
+    // 現在地と地名検索で処理をわけるためのフラグ
     private static final int TEIDEN_LOCATION = 1;
     private static final int TEIDEN_SEARCH = 2;
+    
+    // 入力履歴のリクエストコード
+    private static final int REQ_INPUT_HISTORY = 1;
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
@@ -98,6 +103,12 @@ public class Top extends Activity implements LocationListener{
     
     /** 検索履歴のApdater */
     private HistoryAdapter mAdapter;
+    
+    /** 入力履歴から復元された都道府県 */
+    private String mInputHistoryPref = null;
+    
+    /** 入力履歴から復元された住所 */
+    private String mInputHistoryAddress = null;
     
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
@@ -390,6 +401,7 @@ public class Top extends Activity implements LocationListener{
         protected void onPostExecute(HashMap<String, ArrayList<Integer>> areaMap) {
             TextView groupNumber = null;
             TextView teidenSpan = null;
+            String pref = null, address = null;
             switch (mMode) {
                 case TEIDEN_LOCATION:
                     groupNumber = (TextView) findViewById(R.id.groupNumber);
@@ -403,10 +415,10 @@ public class Top extends Activity implements LocationListener{
                     groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
                     teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
                     // フォームから住所を取得
-                    String pref = (String) mSpnPref.getSelectedItem();
-                    String address = mEditAddress.getText().toString();
+                    pref = (String) mSpnPref.getSelectedItem();
+                    address = hankakuToZenkaku(mEditAddress.getText().toString());
                     // 半角英数を全角英数へ
-                    mStrAddress = pref + hankakuToZenkaku(address);
+                    mStrAddress = pref + address;
                     break;
             }
             
@@ -483,6 +495,14 @@ public class Top extends Activity implements LocationListener{
                                         + "\n"
                                         + teidenBuilder.toString()
                                 );
+                                // ヒットしたパターンだけ、入力履歴に保存
+                                if (pref != null && address != null) {
+                                    // 入力履歴から復元したパターンは除外して保存
+                                    if (!(pref.equals(mInputHistoryPref)
+                                            && address.equals(mInputHistoryAddress))) {
+                                        mDBHelper.insertInputHistories(pref, address);
+                                    }
+                                }
                             }
                         }
                     }
@@ -781,5 +801,35 @@ public class Top extends Activity implements LocationListener{
             bindView(v, context, cursor);
             return v;
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQ_INPUT_HISTORY:
+                if (resultCode == RESULT_OK) {
+                    Bundle b = data.getExtras();
+                    mInputHistoryPref = b.getString(InputHistories.PREF);
+                    mInputHistoryAddress = b.getString(InputHistories.ADDRESS);
+                    String[] prefs = getResources().getStringArray(R.array.prefs);
+                    for (int i = 0; i < prefs.length; i++) {
+                        if (prefs[i].equals(mInputHistoryPref)) {
+                            mSpnPref.setSelection(i);
+                            break;
+                        }
+                    }
+                    mEditAddress.setText(mInputHistoryAddress);
+                }
+                break;
+        }
+    }
+    
+    /**
+     * 入力履歴を取得するActivityを呼び出す
+     * @param v
+     */
+    public void showInputHistory(View v) {
+        Intent intent = new Intent(this, InputHistory.class);
+        startActivityForResult(intent, REQ_INPUT_HISTORY);
     }
 }
