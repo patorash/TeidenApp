@@ -108,4 +108,10 @@
         <item>この履歴を削除</item>
         <item>キャンセル</item>
     </string-array>
+    <string-array name="dialog_menu_location_history">
+        <item>この場所で検索</item>
+        <item>タイトル変更</item>
+        <item>この履歴を削除</item>
+        <item>キャンセル</item>
+    </string-array>
 </resources>

@@ -44,6 +44,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TabHost;
@@ -53,6 +54,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 import com.okolabo.android.teidennotify.DatabaseHelper.Histories;
 import com.okolabo.android.teidennotify.DatabaseHelper.InputHistories;
+import com.okolabo.android.teidennotify.DatabaseHelper.LocationHistories;
 
 public class Top extends Activity implements LocationListener{
     
@@ -62,6 +64,8 @@ public class Top extends Activity implements LocationListener{
     
     // 入力履歴のリクエストコード
     private static final int REQ_INPUT_HISTORY = 1;
+    // 現在地履歴のリクエストコード
+    private static final int REQ_LOCATION_HISTORY = 2;
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
@@ -180,7 +184,7 @@ public class Top extends Activity implements LocationListener{
         mEditAddress = (EditText) findViewById(R.id.address);
         
         // 検索ボタン
-        Button btnSearch = (Button) findViewById(R.id.search);
+        ImageButton btnSearch = (ImageButton) findViewById(R.id.search);
         btnSearch.setOnClickListener(new OnClickListener() {
             
             public void onClick(View v) {
@@ -253,7 +257,6 @@ public class Top extends Activity implements LocationListener{
      */
     private void gpsLocationChanged() {
         // 位置情報を住所に変換
-        TextView currentAddress = (TextView) findViewById(R.id.currentAddress);
         try {
             List<Address> list_address = mGeocoder.getFromLocation(mLocation.getLatitude(), mLocation.getLongitude(), 10);
             Address address = list_address.get(0);
@@ -262,39 +265,49 @@ public class Top extends Activity implements LocationListener{
             for (int i = 1; (buf = address.getAddressLine(i)) != null; i++) {
                 builder.append(buf);
             }
-            String strAddress = builder.toString();
-            // TODO テストの際に使う このTODOはテストのときにここを見つけるために付けてます。
-            // グループが1つの住所
-//            strAddress = "東京都調布市小島町２丁目XX−X";
-            // グループが複数の住所
-//            strAddress = "神奈川県相模原市南区相南１丁目";
-            currentAddress.setText(strAddress);
-            
-            // 住所がどのエリアであるか照合する
-            Iterator<String> prefIterator = TEIDEN_URL_LIST.keySet().iterator();
-            String hitPref = null;
-            while (prefIterator.hasNext()) {
-                String pref = (String) prefIterator.next();
-                Pattern pattern = Pattern.compile(pref);
-                Matcher matcher = pattern.matcher(strAddress);
-                if (matcher.find()) {
-                    hitPref = pref;
-                    break;
-                }
-            }
-            if (hitPref != null) {
-                // 非同期でデータを取得
-                new SearchAsyncTask(TEIDEN_LOCATION, strAddress).execute(hitPref);
-            } else {
-                // 対象の都道府県以外なので、計画停電エリア外と表示
-                Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
-                btnGetMyLocation.setEnabled(true);
-                btnGetMyLocation.setText(R.string.get_my_location);
-                ((TextView) findViewById(R.id.groupNumber)).setText(R.string.out_of_area);
-                ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.out_of_area);
-            }
+            // 以降、別メソッドにする
+            setCurrentLocationInfo(builder.toString());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 現在地の情報を取得して画面に反映
+     * 現在地の履歴から取得可能にするために、住所を引数にしたメソッドにした
+     * @param address
+     */
+    private void setCurrentLocationInfo(String address) {
+        TextView currentAddress = (TextView) findViewById(R.id.currentAddress);
+        // TODO テストの際に使う このTODOはテストのときにここを見つけるために付けてます。
+        // グループが1つの住所
+//        address = "東京都調布市小島町２丁目XX−X";
+        // グループが複数の住所
+//            address = "神奈川県相模原市南区相南１丁目";
+        currentAddress.setText(address);
+        
+        // 住所がどのエリアであるか照合する
+        Iterator<String> prefIterator = TEIDEN_URL_LIST.keySet().iterator();
+        String hitPref = null;
+        while (prefIterator.hasNext()) {
+            String pref = (String) prefIterator.next();
+            Pattern pattern = Pattern.compile(pref);
+            Matcher matcher = pattern.matcher(address);
+            if (matcher.find()) {
+                hitPref = pref;
+                break;
+            }
+        }
+        if (hitPref != null) {
+            // 非同期でデータを取得
+            new SearchAsyncTask(TEIDEN_LOCATION, address).execute(hitPref);
+        } else {
+            // 対象の都道府県以外なので、計画停電エリア外と表示
+            Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+            btnGetMyLocation.setEnabled(true);
+            btnGetMyLocation.setText(R.string.get_my_location);
+            ((TextView) findViewById(R.id.groupNumber)).setText(R.string.out_of_area);
+            ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.out_of_area);
         }
     }
 
@@ -367,10 +380,8 @@ public class Top extends Activity implements LocationListener{
                 }
             }
         } catch (MalformedURLException e) {
-            // TODO 自動生成された catch ブロック
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO 自動生成された catch ブロック
             e.printStackTrace();
         }
        return areaMap;
@@ -495,13 +506,24 @@ public class Top extends Activity implements LocationListener{
                                         + "\n"
                                         + teidenBuilder.toString()
                                 );
-                                // ヒットしたパターンだけ、入力履歴に保存
-                                if (pref != null && address != null) {
-                                    // 入力履歴から復元したパターンは除外して保存
-                                    if (!(pref.equals(mInputHistoryPref)
-                                            && address.equals(mInputHistoryAddress))) {
-                                        mDBHelper.insertInputHistories(pref, address);
-                                    }
+                                switch (mMode) {
+                                    case TEIDEN_LOCATION:
+                                        if (!mDBHelper.existsLocation(mStrAddress)) {
+                                            // まだ保存されていない住所
+                                            mDBHelper.insertLocationHistories(mStrAddress);
+                                        }
+                                        break;
+                                        
+                                    case TEIDEN_SEARCH:
+                                        // ヒットしたパターンだけ、入力履歴に保存
+                                        if (pref != null && address != null) {
+                                            // 入力履歴から復元したパターンは除外して保存
+                                            if (!(pref.equals(mInputHistoryPref)
+                                                    && address.equals(mInputHistoryAddress))) {
+                                                mDBHelper.insertInputHistories(pref, address);
+                                            }
+                                        }
+                                        break;
                                 }
                             }
                         }
@@ -821,6 +843,15 @@ public class Top extends Activity implements LocationListener{
                     mEditAddress.setText(mInputHistoryAddress);
                 }
                 break;
+                
+            case REQ_LOCATION_HISTORY:
+                // TODO
+                if (resultCode == RESULT_OK) {
+                    Bundle b = data.getExtras();
+                    String locationHistoryAddress = b.getString(LocationHistories.ADDRESS);
+                    setCurrentLocationInfo(locationHistoryAddress);
+                }
+                break;
         }
     }
     
@@ -831,5 +862,14 @@ public class Top extends Activity implements LocationListener{
     public void showInputHistory(View v) {
         Intent intent = new Intent(this, InputHistory.class);
         startActivityForResult(intent, REQ_INPUT_HISTORY);
+    }
+    
+    /**
+     * 現在地履歴を取得するActivityを呼び出す
+     * @param v
+     */
+    public void showLocationHistory(View v) {
+        Intent intent = new Intent(this, LocationHistory.class);
+        startActivityForResult(intent, REQ_LOCATION_HISTORY);
     }
 }

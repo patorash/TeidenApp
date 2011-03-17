@@ -14,13 +14,15 @@ import android.util.Log;
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static String TAG = "DatabaseHelper";
 
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 3;
 
     private static final String DATABASE_NAME = "teiden_app.db";
 
     private SQLiteDatabase mDB;
+    
+    private Context mContext;
 
-    /** 検索履歴 テーブル名 */
+    /** 検索履歴テーブル名 */
     private static final String TBL_HISTORIES = "Historis";
 
     /** 検索履歴 */
@@ -32,6 +34,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public static final String CREATED = "created";
     }
     
+    /** 入力履歴テーブル名 */
     private static final String TBL_INPUT_HISTRIES = "InputHistories";
     
     /** 入力履歴 */
@@ -44,8 +47,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         public static final String ADDRESS = "address";
     }
 
+    /** 入力履歴テーブル名 */
+    private static final String TBL_LOCATION_HISTORIES = "LocationHistories";
+    
+    /** 入力履歴 */
+    interface LocationHistories {
+        
+        public static final String ID = "_id";
+
+        public static final String TITLE = "title";
+
+        public static final String ADDRESS = "address";
+    }
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DB_VERSION);
+        mContext = context;
         mDB = getWritableDatabase();
     }
 
@@ -67,6 +84,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + InputHistories.ADDRESS + " TEXT"
                 + ")"
                 );
+        // LocationHistoriesテーブル
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TBL_LOCATION_HISTORIES + " ("
+                + LocationHistories.ID
+                + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + LocationHistories.TITLE + " TEXT,"
+                + LocationHistories.ADDRESS + " TEXT"
+                + ")"
+                );
     }
 
     @Override
@@ -81,6 +106,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     + ")"
                     );
         }
+        if (olderVersion < 3) {
+            // LocationHistoriesテーブル
+            db.execSQL("CREATE TABLE IF NOT EXISTS " + TBL_LOCATION_HISTORIES + " ("
+                    + LocationHistories.ID
+                    + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + LocationHistories.TITLE + " TEXT,"
+                    + LocationHistories.ADDRESS + " TEXT"
+                    + ")"
+                    );
+        }
+        
     }
 
     public long insertHistories(String history) {
@@ -166,6 +202,88 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return mDB.delete(TBL_INPUT_HISTRIES, where, placeHolder);
     }
     
+    //
+    // 以下、LocationHistories
+    //
+    /**
+     * 現在地履歴を保存する
+     * 
+     * @param address 現在地の住所
+     */
+    public long insertLocationHistories(String address) {
+        // インサート
+        ContentValues cv = new ContentValues();
+        cv.put(LocationHistories.TITLE, mContext.getString(R.string.no_title));
+        cv.put(LocationHistories.ADDRESS, address);
+        long rowId = 0;
+        rowId = mDB.insert(TBL_LOCATION_HISTORIES, null, cv);
+        if (rowId <= 0) {
+            Log.e(TAG, "Table: " + TBL_LOCATION_HISTORIES + " INSERT ERROR!");
+        }
+        return rowId;
+    }
+    
+    
+
+    /** 入力履歴を全件取得 */
+    public Cursor getAllLocationHistories() {
+        String orderBy = LocationHistories.ID + " DESC";
+        return mDB.query(TBL_LOCATION_HISTORIES, null, null, null, null, null, orderBy);
+    }
+    
+    /** 指定した入力履歴を取得 */
+    public Cursor getLocationHistory(long id) {
+        String where = LocationHistories.ID + " = ?";
+        String[] placeHolder = {
+            String.valueOf(id)
+        };
+        return mDB.query(TBL_LOCATION_HISTORIES, null, where, placeHolder, null, null, null);
+    }
+
+    /** 入力履歴を消す */
+    public int deleteLocationHistory(long id) {
+        String where = LocationHistories.ID + " = ?";
+        String[] placeHolder = {
+            String.valueOf(id)
+        };
+        return mDB.delete(TBL_LOCATION_HISTORIES, where, placeHolder);
+    }
+    
+    /**
+     * 現在地チェックした地名が既に履歴にあるか確認
+     * @param address
+     * @return
+     */
+    public boolean existsLocation(String address) {
+        boolean result;
+        String where = LocationHistories.ADDRESS + " = ?";
+        String[] placeHolder = {
+                address
+        };
+        Cursor c = mDB.query(TBL_LOCATION_HISTORIES, null, where, placeHolder, null, null, null);
+        if (c.getCount() > 0) {
+            result = true;
+        } else {
+            result = false;
+        }
+        c.close();
+        return result;
+    }
+    
+    /**
+     * 地名のタイトルを更新する
+     * @param id
+     * @param title
+     * @return
+     */
+    public int updateLocationTitle(long id, String title) {
+        ContentValues cv = new ContentValues();
+        cv.put(LocationHistories.TITLE, title);
+        return mDB.update(TBL_LOCATION_HISTORIES, cv, LocationHistories.ID + " = ?", new String[] {
+            String.valueOf(id)
+        });
+    }
+
     @Override
     protected void finalize() throws Throwable {
         mDB.close();

@@ -42,4 +42,12 @@
     <string name="select_input_history">入力履歴を選択</string>
     <string name="failed_get_history">入力履歴の取得に失敗しました</string>
     <string name="no_input_history">まだ入力履歴がありません</string>
+    <string name="no_location_history">まだ現在地履歴がありません</string>
+    <string name="no_title">タイトルなし</string>
+    <string name="please_select">選択して下さい</string>
+    <string name="edit_title">タイトルを編集</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="select_location_history">現在地の履歴を選択</string>
+    <string name="menu_location_history">タップ > 検索／長押し > メニュー</string>
 </resources>

@@ -32,4 +32,26 @@
         <item name="android:paddingBottom">5dip</item>
         <item name="android:gravity">center</item>
     </style>
+    <style name="LocationHistoryHeadLine">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">#00f</item>
+        <item name="android:paddingTop">5dip</item>
+        <item name="android:paddingBottom">5dip</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="LocationHistoryMenu">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">#f00</item>
+        <item name="android:gravity">center</item>
+    </style>
+    <style name="LocationTitle">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+    </style>
+    <style name="LocationAddress">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#fff</item>
+    </style>
 </resources>

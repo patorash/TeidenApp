@@ -36,13 +36,27 @@
                         android:text="@string/caution_gps"
                         style="@style/Text"
                     />
-                    <Button
-                        android:id="@+id/btnGetMyLocation"
+                    <LinearLayout
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/get_my_location"
-                        android:onClick="getMyLocation"
-                    />
+                        android:orientation="horizontal"
+                        >
+                        <Button
+                            android:id="@+id/btnGetMyLocation"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/get_my_location"
+                            android:onClick="getMyLocation"
+                            android:layout_weight="1"
+                            />
+                        <ImageButton
+                            android:layout_width="48dip"
+                            android:layout_height="48dip"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:adjustViewBounds="true"
+                            android:onClick="showLocationHistory"
+                            />
+                    </LinearLayout>
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
@@ -104,12 +118,26 @@
                         android:text="@string/search_address"
                         style="@style/HeadLineStyle"
                     />
-                    <Spinner
-                        android:id="@+id/pref"
+                    <LinearLayout
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:drawSelectorOnTop="true"
-                    />
+                        android:orientation="horizontal"
+                        >
+                        <Spinner
+                            android:id="@+id/pref"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:drawSelectorOnTop="true"
+                            android:layout_weight="1"
+                            />
+                        <ImageButton
+                            android:layout_width="48dip"
+                            android:layout_height="48dip"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:adjustViewBounds="true"
+                            android:onClick="showInputHistory"
+                            />
+                    </LinearLayout>
                     <LinearLayout
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
@@ -124,20 +152,13 @@
                             android:layout_weight="1"
                             />
                         <ImageButton
+                            android:id="@+id/search"
                             android:layout_width="48dip"
                             android:layout_height="48dip"
-                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:src="@android:drawable/ic_menu_search"
                             android:adjustViewBounds="true"
-                            android:onClick="showInputHistory"
                             />
                     </LinearLayout>
-                    <Button
-                        android:id="@+id/search"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:gravity="left"
-                        android:text="@string/search"
-                    />
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
