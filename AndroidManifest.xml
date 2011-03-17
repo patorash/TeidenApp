@@ -3,15 +3,15 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="19"
-    android:versionName="1.6.0"
+    android:versionCode="20"
+    android:versionName="1.7.0"
     >
  -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="19"
-    android:versionName="1.6.0"
+    android:versionCode="20"
+    android:versionName="1.7.0"
     android:installLocation="preferExternal">
     <application
         android:icon="@drawable/icon"

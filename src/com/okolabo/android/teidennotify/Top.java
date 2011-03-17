@@ -1,8 +1,6 @@
 package com.okolabo.android.teidennotify;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,8 +12,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jp.co.kayo.android.exceptionlib.ExceptionBinder;
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.Source;
+import net.it4myself.util.RestfulClient;
+
+import org.apache.http.client.ClientProtocolException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -69,6 +72,12 @@ public class Top extends Activity implements LocationListener{
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
+    /** 住所を渡したら所属グループが取得できるWebAPIのURL */
+    private static final String URL_GROUP = "http://prayforjapanandroid.appspot.com/api/group";
+    
+    /** 停電スケジュールをjsonで取得できるWebAPIのURL */
+    private static final String URL_SCHEDULE = "http://prayforjapanandroid.appspot.com/api/schedule";
+    
     
     /** 位置情報を見るマネージャー */
     protected LocationManager mLocationManager;
@@ -91,13 +100,8 @@ public class Top extends Activity implements LocationListener{
     
     private Calendar mCalendar;
     
-    private int mMonth;
-    
     /** 今日の日付(365日で) */
     private int mCurrentDayOfYear;
-    
-    /** 計画停電がわかっている日付(365日で) */
-    private int mMaxKnownDayOfYear;
     
     /** DBHelper */
     private DatabaseHelper mDBHelper;
@@ -113,6 +117,9 @@ public class Top extends Activity implements LocationListener{
     
     /** 入力履歴から復元された住所 */
     private String mInputHistoryAddress = null;
+    
+    /** 停電スケジュールをキャッシュするJSONObject */
+    private JSONObject mSchedule = null;
     
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
@@ -138,14 +145,8 @@ public class Top extends Activity implements LocationListener{
         // グループと停電時間が日ごとに変わるので、日付を取得しとく
         // 今日の日付を保存
         mCalendar = Calendar.getInstance();
-        mMonth = mCalendar.get(Calendar.MONTH) + 1;
         // 今日の日付(365日で) 月が変わっても対応できるように。
         mCurrentDayOfYear = mCalendar.get(Calendar.DAY_OF_YEAR);
-        
-        // 計画停電情報がわかっている日まで
-        mCalendar.set(Calendar.MONTH, mMonth - 1); // 3月
-        mCalendar.set(Calendar.DATE, 21);
-        mMaxKnownDayOfYear = mCalendar.get(Calendar.DAY_OF_YEAR);
         
         // DBHelperを生成
         mDBHelper = new DatabaseHelper(this);
@@ -189,9 +190,12 @@ public class Top extends Activity implements LocationListener{
             
             public void onClick(View v) {
                 // 非同期で検索
-                // スピナーから都道府県を取得
+                // フォームから住所を取得
                 String pref = (String)mSpnPref.getSelectedItem();
-                new SearchAsyncTask(TEIDEN_SEARCH, null).execute(pref);
+                String address = hankakuToZenkaku(mEditAddress.getText().toString());
+                // 半角英数を全角英数へ
+                String strAddress = pref + address;
+                new SearchAsyncTask(TEIDEN_SEARCH, strAddress).execute();
             }
         });
     }
@@ -300,7 +304,7 @@ public class Top extends Activity implements LocationListener{
         }
         if (hitPref != null) {
             // 非同期でデータを取得
-            new SearchAsyncTask(TEIDEN_LOCATION, address).execute(hitPref);
+            new SearchAsyncTask(TEIDEN_LOCATION, address).execute();
         } else {
             // 対象の都道府県以外なので、計画停電エリア外と表示
             Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
@@ -326,72 +330,73 @@ public class Top extends Activity implements LocationListener{
     }
     
     
-    protected HashMap<String, ArrayList<Integer>> getTeidenInfo(String url) {
-        // 住所がどのエリアであるか照合する
-        Source source;
-        HashMap<String, ArrayList<Integer>> areaMap = new HashMap<String, ArrayList<Integer>>();
-        try {
-            source = new Source(new URL(url));
-            List<Element> elementList = source.getAllElementsByClass("NewsBody");
-//          List<Element> elementList=source.getAllElements();
-            for (Element element : elementList) {
-                String newsBody = element.toString();
-//                Log.d("TeidenApp", newsBody);
-                String[] areas = newsBody.split("<br />|<br>");
-                for (int i = 1; i < areas.length; i++) {
-                    String[] area = areas[i].trim().split("　");
-                    if (area.length > 1) {
-                        String[] areaNames = area[0].split(" ");
-                        StringBuilder areaNameBuilder = new StringBuilder();
-                        for (String areaName: areaNames) {
-                            areaNameBuilder.append(areaName);
-                        }
-                        String areaName = areaNameBuilder.toString();
-                        // areaName から「大字」を除去する
-                        areaName = areaName.replaceAll("大字", "");
-                        // areaName から「の一部」を除去する
-                        areaName = areaName.replaceAll("の一部", "");
-                        ArrayList<Integer> groups;
-                        if (areaMap.containsKey(areaName)) {
-                            groups = areaMap.get(areaName);
-                        } else {
-                            groups = new ArrayList<Integer>();
-                        }
-                        area[1] = zenkakuToHankaku(area[1]);
-//                        Log.d("TeidenApp", area[1]);
-                        String areaNum = null;
-                        Pattern pattern = Pattern.compile("\\d");
-                        Matcher matcher = pattern.matcher(area[1]);
-                        if (matcher.find()) {
-                            areaNum = matcher.group();
-                        }
-//                        Log.d("TeidenApp", "areaNum = " + areaNum);
-                        if (areaNum != null) {
-                            // 念を押して、<br>を削除するようにした
-                            areaNum = areaNum.replace("<br>", "");
-                            areaNum = areaNum.replace("<br />", "");
-                            int intAreaNum = Integer.valueOf(areaNum);
-                            if (!groups.contains(intAreaNum)) {
-                                groups.add(intAreaNum);
-                                areaMap.put(areaName, groups);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-       return areaMap;
-    }
+//    protected HashMap<String, ArrayList<Integer>> getTeidenInfo(String url) {
+//        // 住所がどのエリアであるか照合する
+//        Source source;
+//        HashMap<String, ArrayList<Integer>> areaMap = new HashMap<String, ArrayList<Integer>>();
+//        try {
+//            // 今は毎日新聞からデータ取ってる。ここをGAEに切り替える
+//            source = new Source(new URL(url));
+//            List<Element> elementList = source.getAllElementsByClass("NewsBody");
+////          List<Element> elementList=source.getAllElements();
+//            for (Element element : elementList) {
+//                String newsBody = element.toString();
+////                Log.d("TeidenApp", newsBody);
+//                String[] areas = newsBody.split("<br />|<br>");
+//                for (int i = 1; i < areas.length; i++) {
+//                    String[] area = areas[i].trim().split("　");
+//                    if (area.length > 1) {
+//                        String[] areaNames = area[0].split(" ");
+//                        StringBuilder areaNameBuilder = new StringBuilder();
+//                        for (String areaName: areaNames) {
+//                            areaNameBuilder.append(areaName);
+//                        }
+//                        String areaName = areaNameBuilder.toString();
+//                        // areaName から「大字」を除去する
+//                        areaName = areaName.replaceAll("大字", "");
+//                        // areaName から「の一部」を除去する
+//                        areaName = areaName.replaceAll("の一部", "");
+//                        ArrayList<Integer> groups;
+//                        if (areaMap.containsKey(areaName)) {
+//                            groups = areaMap.get(areaName);
+//                        } else {
+//                            groups = new ArrayList<Integer>();
+//                        }
+//                        area[1] = zenkakuToHankaku(area[1]);
+////                        Log.d("TeidenApp", area[1]);
+//                        String areaNum = null;
+//                        Pattern pattern = Pattern.compile("\\d");
+//                        Matcher matcher = pattern.matcher(area[1]);
+//                        if (matcher.find()) {
+//                            areaNum = matcher.group();
+//                        }
+////                        Log.d("TeidenApp", "areaNum = " + areaNum);
+//                        if (areaNum != null) {
+//                            // 念を押して、<br>を削除するようにした
+//                            areaNum = areaNum.replace("<br>", "");
+//                            areaNum = areaNum.replace("<br />", "");
+//                            int intAreaNum = Integer.valueOf(areaNum);
+//                            if (!groups.contains(intAreaNum)) {
+//                                groups.add(intAreaNum);
+//                                areaMap.put(areaName, groups);
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//       return areaMap;
+//    }
     
     /**
      * 非同期で検索する
      *
      */
-    private class SearchAsyncTask extends AsyncTask<String, Void, HashMap<String, ArrayList<Integer>>> {
+    private class SearchAsyncTask extends AsyncTask<Void, Void, HashMap<String, ArrayList<Integer>>> {
 
         private ProgressDialog mProgress;
         private int mMode;
@@ -403,9 +408,43 @@ public class Top extends Activity implements LocationListener{
         }
         
         @Override
-        protected HashMap<String, ArrayList<Integer>> doInBackground(String... params) {
-            String pref = params[0];
-            return getTeidenInfo(TEIDEN_URL_LIST.get(pref));
+        protected HashMap<String, ArrayList<Integer>> doInBackground(Void... params) {
+            String response;
+            // スケジュールのキャッシュがなければ、GAEからDLする
+            if (mSchedule == null) {
+                try {
+                    response = RestfulClient.Get(URL_SCHEDULE, null);
+                    mSchedule = new JSONObject(response);
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            // 住所がどのグループに属しているかGAEに問い合わせる
+            HashMap<String, ArrayList<Integer>> result = new HashMap<String, ArrayList<Integer>>();
+            try {
+                HashMap<String, String> map = new HashMap<String, String>();
+                map.put("address", mStrAddress);
+                response = RestfulClient.Get(URL_GROUP, map);
+                JSONObject json = new JSONObject(response);
+                ArrayList<Integer> groups = new ArrayList<Integer>();
+                JSONArray groupsJson = json.getJSONArray("groups");
+                for (int i = 0; i < groupsJson.length(); i++) {
+                    groups.add(groupsJson.getInt(i));
+                }
+                result.put(json.getString("address"), groups);
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+//            return getTeidenInfo(TEIDEN_URL_LIST.get(pref));
+            return result;
         }
 
         @Override
@@ -425,11 +464,11 @@ public class Top extends Activity implements LocationListener{
                 case TEIDEN_SEARCH:
                     groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
                     teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
-                    // フォームから住所を取得
-                    pref = (String) mSpnPref.getSelectedItem();
-                    address = hankakuToZenkaku(mEditAddress.getText().toString());
-                    // 半角英数を全角英数へ
-                    mStrAddress = pref + address;
+//                    // フォームから住所を取得
+//                    pref = (String) mSpnPref.getSelectedItem();
+//                    address = hankakuToZenkaku(mEditAddress.getText().toString());
+//                    // 半角英数を全角英数へ
+//                    mStrAddress = pref + address;
                     break;
             }
             
@@ -450,49 +489,29 @@ public class Top extends Activity implements LocationListener{
                         groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
                     }
                     
-                    for (int dayOfYear = mCurrentDayOfYear; dayOfYear <= mMaxKnownDayOfYear; dayOfYear++) {
-                        mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
-                        int day = mCalendar.get(Calendar.DATE);
-//                        teidenBuilder.append("" + mMonth + getString(R.string.month) + day + getString(R.string.day) + "\n");
-                        teidenBuilder.append(fmt.format(mCalendar.getTime()) + "\n");
-                        for (Integer group : groups) {
-                            // 日付によってグループの停電時刻が変わるのに対応する！
-                            String teidenGroupSpan = "";
-                            switch (day) {
-                                case 15:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_15)[group - 1];
-                                    break;
-                                    
-                                case 16:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_16)[group - 1];
-                                    break;
-                                    
-                                case 17:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_17)[group - 1];
-                                    break;
-                                    
-                                case 18:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_18)[group - 1];
-                                    break;
-                                    
-                                case 19:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_19)[group - 1];
-                                    break;
-                                    
-                                case 20:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_20)[group - 1];
-                                    break;
-                                    
-                                case 21:
-                                    teidenGroupSpan = getResources().getStringArray(R.array.teiden_group_3_21)[group - 1];
-                                    break;
+                    // 日付があるだけスケジュールを表示する
+                    JSONObject date;
+                    try {
+                        date = mSchedule.getJSONObject("date");
+                        for (int dayOfYear = mCurrentDayOfYear; dayOfYear < mCurrentDayOfYear + date.length(); dayOfYear++) {
+                            mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
+                            String strDate = fmt.format(mCalendar.getTime());
+                            JSONArray schedules = date.getJSONArray(strDate);
+                            teidenBuilder.append(strDate + "\n");
+                            for (Integer group : groups) {
+                                // 日付によってグループの停電時刻が変わるのに対応する！
+                                String teidenGroupSpan = schedules.getString(group - 1);
+                                // グループ名を前に記述
+                                teidenBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
+                                teidenBuilder.append(teidenGroupSpan + "\n");
                             }
-                            // グループ名を前に記述
-                            teidenBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                            teidenBuilder.append(teidenGroupSpan + "\n");
+                            teidenBuilder.append("\n");
                         }
-                        teidenBuilder.append("\n");
+                    } catch (JSONException e) {
+                        // date.getJSONArray(strDate)で例外が発生するが、無視する
+                        // e.printStackTrace();
                     }
+                    
                     if (groupNumber != null) {
                         groupNumber.setText(groupBuilder.toString());
                         if (teidenSpan != null) {
@@ -500,7 +519,7 @@ public class Top extends Activity implements LocationListener{
                                 teidenSpan.setText(R.string.teiden_span_unknown);
                             } else {
                                 teidenSpan.setText(teidenBuilder.toString());
-                                // TODO 履歴をDBに保存する
+                                // 履歴をDBに保存する
                                 mDBHelper.insertHistories(
                                         groupBuilder.toString()
                                         + "\n"
