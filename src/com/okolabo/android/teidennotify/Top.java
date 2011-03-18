@@ -192,7 +192,7 @@ public class Top extends Activity implements LocationListener{
                 // 非同期で検索
                 // フォームから住所を取得
                 String pref = (String)mSpnPref.getSelectedItem();
-                String address = hankakuToZenkaku(mEditAddress.getText().toString());
+                String address = hankakuToZenkaku(mEditAddress.getText());
                 // 半角英数を全角英数へ
                 String strAddress = pref + address;
                 new SearchAsyncTask(TEIDEN_SEARCH, strAddress).execute();
@@ -610,7 +610,8 @@ public class Top extends Activity implements LocationListener{
      * @param value
      * @return
      */
-    private String zenkakuToHankaku(String value) {
+    @SuppressWarnings("unused")
+    private String zenkakuToHankaku(CharSequence value) {
         StringBuilder sb = new StringBuilder(value);
         for (int i = 0; i < sb.length(); i++) {
             int c = (int) sb.charAt(i);
@@ -618,8 +619,8 @@ public class Top extends Activity implements LocationListener{
                 sb.setCharAt(i, (char) (c - 0xFEE0));
             }
         }
-        value = sb.toString();
-        return value;
+        final String result = sb.toString();
+        return result;
     }
     
     /**
@@ -627,7 +628,7 @@ public class Top extends Activity implements LocationListener{
      * @param value
      * @return
      */
-    private String hankakuToZenkaku(String value) {
+    private String hankakuToZenkaku(CharSequence value) {
         StringBuilder sb = new StringBuilder(value);
         for (int i = 0; i < sb.length(); i++) {
             int c = (int) sb.charAt(i);
@@ -635,8 +636,8 @@ public class Top extends Activity implements LocationListener{
                 sb.setCharAt(i, (char) (c + 0xFEE0));
             }
         }
-        value = sb.toString();
-        return value;
+        final String result = sb.toString();
+        return result;
     }
     
     @Override
