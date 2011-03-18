@@ -464,9 +464,10 @@ public class Top extends Activity implements LocationListener{
                 case TEIDEN_SEARCH:
                     groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
                     teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
-//                    // フォームから住所を取得
-//                    pref = (String) mSpnPref.getSelectedItem();
-//                    address = hankakuToZenkaku(mEditAddress.getText().toString());
+                    // フォームから住所を取得
+                    // 入力履歴を保存するため
+                    pref = (String) mSpnPref.getSelectedItem();
+                    address = hankakuToZenkaku(mEditAddress.getText());
 //                    // 半角英数を全角英数へ
 //                    mStrAddress = pref + address;
                     break;
