@@ -123,6 +123,26 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         >
+                        <EditText
+                            android:id="@+id/zipcode"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_zipcode"
+                            android:singleLine="true"
+                            android:layout_weight="1"
+                            />
+                        <Button
+                            android:text="@string/zip_search"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:onClick="showZipSearch"
+                            />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        >
                         <Spinner
                             android:id="@+id/pref"
                             android:layout_width="fill_parent"

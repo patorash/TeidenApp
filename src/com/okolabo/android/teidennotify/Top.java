@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -33,6 +34,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -69,6 +71,8 @@ public class Top extends Activity implements LocationListener{
     private static final int REQ_INPUT_HISTORY = 1;
     // 現在地履歴のリクエストコード
     private static final int REQ_LOCATION_HISTORY = 2;
+    // 郵便番号検索のリクエストコード
+    private static final int REQ_SEARCH_ZIPCODE = 3;
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
@@ -78,6 +82,8 @@ public class Top extends Activity implements LocationListener{
     /** 停電スケジュールをjsonで取得できるWebAPIのURL */
     private static final String URL_SCHEDULE = "http://prayforjapanandroid.appspot.com/api/schedule";
     
+    /** 都県の計画停電エリア情報が取得できるWebAPIのURL */
+    private static final String URL_PREF = "http://prayforjapanandroid.appspot.com/api/pref";
     
     /** 位置情報を見るマネージャー */
     protected LocationManager mLocationManager;
@@ -873,6 +879,28 @@ public class Top extends Activity implements LocationListener{
                     setCurrentLocationInfo(locationHistoryAddress);
                 }
                 break;
+                
+            case REQ_SEARCH_ZIPCODE:
+                if (resultCode == RESULT_OK) {
+                    Bundle b = data.getExtras();
+                    boolean hit_flg = false;
+                    final String pref = b.getString(Constants.EXTRA_PREF);
+                    final String address = b.getString(Constants.EXTRA_ADDRESS);
+                    String[] prefs = getResources().getStringArray(R.array.prefs);
+                    for (int i = 0; i < prefs.length; i++) {
+                        if (prefs[i].equals(pref)) {
+                            mSpnPref.setSelection(i);
+                            hit_flg = true;
+                            break;
+                        }
+                    }
+                    if (hit_flg) {
+                        mEditAddress.setText(address);
+                    } else {
+                        Toast.makeText(this, R.string.no_hit_zipcode, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                break;
         }
     }
     
@@ -892,5 +920,39 @@ public class Top extends Activity implements LocationListener{
     public void showLocationHistory(View v) {
         Intent intent = new Intent(this, LocationHistory.class);
         startActivityForResult(intent, REQ_LOCATION_HISTORY);
+    }
+    
+    public void showZipSearch(View v) {
+        try {
+            final String zipcode = ((TextView)findViewById(R.id.zipcode)).getText().toString();
+            Intent i = new Intent(Constants.ACTION_SEARCH);
+            i.addCategory(Intent.CATEGORY_DEFAULT);
+            i.putExtra(Constants.EXTRA_ZIP, zipcode);
+            startActivityForResult(i, REQ_SEARCH_ZIPCODE);
+        } catch (ActivityNotFoundException e) {
+            new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setTitle(R.string.zip_search)
+                .setMessage(R.string.no_zip_search_description)
+                .setPositiveButton(R.string.move, new DialogInterface.OnClickListener() {
+                    
+                    public void onClick(DialogInterface dialog, int which) {
+                        // 英吉さんの郵便番号検索をDLしてもらうために、アンドロイドマーケットに誘導
+                        Uri uri = Uri
+                                .parse("market://details?id=luck.of.wise.zipsearch");
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        startActivity(intent);
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .create()
+                .show();
+        }
     }
 }

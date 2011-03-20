@@ -49,4 +49,9 @@
     <string name="cancel">キャンセル</string>
     <string name="select_location_history">現在地の履歴を選択</string>
     <string name="menu_location_history">タップ > 検索／長押し > メニュー</string>
+    <string name="zip_search">郵便番号検索</string>
+    <string name="hint_zipcode">郵便番号-なしで入力</string>
+    <string name="no_zip_search_description">郵便番号検索アプリが見つかりませんでした。マーケットに移動してもよろしいですか？</string>
+    <string name="move">移動する</string>
+    <string name="no_hit_zipcode">計画停電対象外の都道府県です</string>
 </resources>
