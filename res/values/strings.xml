@@ -14,9 +14,10 @@
     <string name="dai">第</string>
     <string name="group">グループ</string>
     <string name="teiden_span">停電時間帯：</string>
-    <string name="out_of_area">計画停電エリア外の住所です</string>
+    <string name="out_of_area">計画停電エリア外か、エリアから外れた可能性があります。東京電力のサイトをご確認ください。</string>
     <string name="search_address">地名を指定：</string>
-    <string name="hint_edit_address">例：台東区下谷</string>
+    <string name="hint_edit_address">例：○○市××町2丁目</string>
+    <string name="completion_hint_edit_address">対象エリアのみ候補が出ます</string>
     <string name="search_group">指定位置のグループ：</string>
     <string name="search">検索する</string>
     <string name="finish">終了</string>
@@ -27,8 +28,7 @@
     https://market.android.com/details?id=com.okolabo.android.teidennotify</string>
     <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。多少時間はかかります。
     取れなくなったらメニューのアプリについてから連絡お願いします。</string>
-    <string name="caution_search">「X丁目」まで入力。Xは英数字。
-    取れなくなったらメニューのアプリについてから連絡お願いします。</string>
+    <string name="caution_search">検索候補表示に対応しました。\n停電エリアのみ候補に出ます。</string>
     <string name="about_app">アプリについて</string>
     <string name="get_my_location">現在地を取得</string>
     <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。</string>
@@ -54,4 +54,9 @@
     <string name="no_zip_search_description">郵便番号検索アプリが見つかりませんでした。マーケットに移動してもよろしいですか？</string>
     <string name="move">移動する</string>
     <string name="no_hit_zipcode">計画停電対象外の都道府県です</string>
+    <string name="please_select_pref">都県を選択して下さい</string>
+    <string name="data_load_pref">市区町村データをロード中...\n計画停電エリアのみ候補に出ます</string>
+    <string name="description_suggest_address">計画停電対象の住所のみ、候補として表示されます。ないエリアは計画停電エリアから外れた可能性がありますので、一応、東京電力のサイトにてご確認ください。</string>
+    <string name="pref">都県名：</string>
+    <string name="decision">決定</string>
 </resources>

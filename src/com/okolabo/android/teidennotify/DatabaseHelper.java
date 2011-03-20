@@ -120,6 +120,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public long insertHistories(String history) {
+        checkOpen();
         // インサート
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Calendar cal = Calendar.getInstance();
@@ -136,11 +137,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public Cursor getAll() {
+        checkOpen();
         String orderBy = Histories.ID + " DESC";
         return mDB.query(TBL_HISTORIES, null, null, null, null, null, orderBy);
     }
     
     public Cursor get(long id) {
+        checkOpen();
         String where = Histories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -149,6 +152,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public int delete(long id) {
+        checkOpen();
         String where = Histories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -166,6 +170,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @param address 都道府県以降の住所
      */
     public long insertInputHistories(String pref, String address) {
+        checkOpen();
         // インサート
         ContentValues cv = new ContentValues();
         cv.put(InputHistories.PREF, pref);
@@ -180,12 +185,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /** 入力履歴を全件取得 */
     public Cursor getAllInputHistories() {
+        checkOpen();
         String orderBy = InputHistories.ID + " DESC";
         return mDB.query(TBL_INPUT_HISTRIES, null, null, null, null, null, orderBy);
     }
     
     /** 指定した入力履歴を取得 */
     public Cursor getInputHistory(long id) {
+        checkOpen();
         String where = InputHistories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -195,6 +202,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /** 入力履歴を消す */
     public int deleteInputHistory(long id) {
+        checkOpen();
         String where = InputHistories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -211,6 +219,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @param address 現在地の住所
      */
     public long insertLocationHistories(String address) {
+        checkOpen();
         // インサート
         ContentValues cv = new ContentValues();
         cv.put(LocationHistories.TITLE, mContext.getString(R.string.no_title));
@@ -227,12 +236,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /** 入力履歴を全件取得 */
     public Cursor getAllLocationHistories() {
+        checkOpen();
         String orderBy = LocationHistories.ID + " DESC";
         return mDB.query(TBL_LOCATION_HISTORIES, null, null, null, null, null, orderBy);
     }
     
     /** 指定した入力履歴を取得 */
     public Cursor getLocationHistory(long id) {
+        checkOpen();
         String where = LocationHistories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -242,6 +253,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     /** 入力履歴を消す */
     public int deleteLocationHistory(long id) {
+        checkOpen();
         String where = LocationHistories.ID + " = ?";
         String[] placeHolder = {
             String.valueOf(id)
@@ -255,6 +267,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public boolean existsLocation(String address) {
+        checkOpen();
         boolean result;
         String where = LocationHistories.ADDRESS + " = ?";
         String[] placeHolder = {
@@ -277,13 +290,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
      * @return
      */
     public int updateLocationTitle(long id, String title) {
+        checkOpen();
         ContentValues cv = new ContentValues();
         cv.put(LocationHistories.TITLE, title);
         return mDB.update(TBL_LOCATION_HISTORIES, cv, LocationHistories.ID + " = ?", new String[] {
             String.valueOf(id)
         });
     }
-
+    
+    /**
+     * データベースが開いているかチェックして、開いてなければ開く
+     */
+    private void checkOpen() {
+        if (mDB == null || !mDB.isOpen()) {
+            mDB = getWritableDatabase();
+        }
+    }
+    
+    /**
+     * データベースをcloseする
+     * 
+     * 実験で使うために定義した
+     */
+    public void close() {
+        mDB.close();
+    }
+    
     @Override
     protected void finalize() throws Throwable {
         mDB.close();

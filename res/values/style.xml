@@ -54,4 +54,12 @@
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">#fff</item>
     </style>
+    <style name="SuggestPref">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+    </style>
+    <style name="SuggestAddress">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">#fff</item>
+    </style>
 </resources>

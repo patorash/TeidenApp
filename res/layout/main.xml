@@ -109,12 +109,6 @@
                     <TextView
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
-                        android:text="@string/caution_search"
-                        style="@style/Text"
-                    />
-                    <TextView
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
                         android:text="@string/search_address"
                         style="@style/HeadLineStyle"
                     />
@@ -170,7 +164,20 @@
                             android:hint="@string/hint_edit_address"
                             android:singleLine="true"
                             android:layout_weight="1"
+                            android:focusable="false"
                             />
+<!-- 
+                        <AutoCompleteTextView
+                            android:id="@+id/address"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="@string/hint_edit_address"
+                            android:singleLine="true"
+                            android:layout_weight="1"
+                            android:completionThreshold="1"
+                            android:completionHint="@string/completion_hint_edit_address"
+                            />
+ -->
                         <ImageButton
                             android:id="@+id/search"
                             android:layout_width="48dip"

@@ -43,7 +43,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import android.util.Log;
 
 public class RestfulClient {
-	public static DefaultHttpClient client = new DefaultHttpClient();
+//	public static DefaultHttpClient client = new DefaultHttpClient();
     private static final String TAG = "Restful";
     public static String basicAuthUsername = "";
     public static String basicAuthPassword = "";
@@ -256,7 +256,7 @@ public class RestfulClient {
 
 	
 	private static HttpEntity DoRequest(HttpUriRequest method) throws ClientProtocolException, IOException {
-//		DefaultHttpClient client = new DefaultHttpClient();
+		DefaultHttpClient client = new DefaultHttpClient();
 		
 		// BASIC認証用のユーザ名が設定されていれば、BASIC認証を行う
 		if(!basicAuthUsername.equals("")){

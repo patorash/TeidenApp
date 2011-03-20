@@ -73,6 +73,9 @@ public class Top extends Activity implements LocationListener{
     private static final int REQ_LOCATION_HISTORY = 2;
     // 郵便番号検索のリクエストコード
     private static final int REQ_SEARCH_ZIPCODE = 3;
+    // 住所入力のリクエストコード
+    private static final int REQ_SUGGEST_ADDRESS = 4;
+    
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
     
@@ -81,9 +84,6 @@ public class Top extends Activity implements LocationListener{
     
     /** 停電スケジュールをjsonで取得できるWebAPIのURL */
     private static final String URL_SCHEDULE = "http://prayforjapanandroid.appspot.com/api/schedule";
-    
-    /** 都県の計画停電エリア情報が取得できるWebAPIのURL */
-    private static final String URL_PREF = "http://prayforjapanandroid.appspot.com/api/pref";
     
     /** 位置情報を見るマネージャー */
     protected LocationManager mLocationManager;
@@ -189,21 +189,34 @@ public class Top extends Activity implements LocationListener{
         
         // テキスト
         mEditAddress = (EditText) findViewById(R.id.address);
+        mEditAddress.setOnClickListener(new OnClickListener() {
+            
+            public void onClick(View v) {
+                showSuggestAddress();
+            }
+        });
         
         // 検索ボタン
         ImageButton btnSearch = (ImageButton) findViewById(R.id.search);
         btnSearch.setOnClickListener(new OnClickListener() {
             
             public void onClick(View v) {
-                // 非同期で検索
-                // フォームから住所を取得
-                String pref = (String)mSpnPref.getSelectedItem();
-                String address = hankakuToZenkaku(mEditAddress.getText());
-                // 半角英数を全角英数へ
-                String strAddress = pref + address;
-                new SearchAsyncTask(TEIDEN_SEARCH, strAddress).execute();
+                addressSearch();
             }
         });
+    }
+    
+    /**
+     * 地域検索を行う
+     */
+    private void addressSearch() {
+        // 非同期で検索
+        // フォームから住所を取得
+        String pref = (String)mSpnPref.getSelectedItem();
+        String address = hankakuToZenkaku(mEditAddress.getText());
+        // 半角英数を全角英数へ
+        String strAddress = pref + address;
+        new SearchAsyncTask(TEIDEN_SEARCH, strAddress).execute();
     }
 
     @Override
@@ -872,7 +885,6 @@ public class Top extends Activity implements LocationListener{
                 break;
                 
             case REQ_LOCATION_HISTORY:
-                // TODO
                 if (resultCode == RESULT_OK) {
                     Bundle b = data.getExtras();
                     String locationHistoryAddress = b.getString(LocationHistories.ADDRESS);
@@ -901,6 +913,22 @@ public class Top extends Activity implements LocationListener{
                     }
                 }
                 break;
+                
+            case REQ_SUGGEST_ADDRESS:
+                if (resultCode == RESULT_OK) {
+                    Bundle b = data.getExtras();
+                    final String pref = b.getString("pref");
+                    final String address = b.getString("address");
+                    String[] prefs = getResources().getStringArray(R.array.prefs);
+                    for (int i = 0; i < prefs.length; i++) {
+                        if (prefs[i].equals(pref)) {
+                            mSpnPref.setSelection(i);
+                            break;
+                        }
+                    }
+                    mEditAddress.setText(address);
+//                    addressSearch();
+                }
         }
     }
     
@@ -954,5 +982,16 @@ public class Top extends Activity implements LocationListener{
                 .create()
                 .show();
         }
+    }
+    
+    /**
+     * 住所入力補完するActivity SuggestAddressに移動する
+     * @param v
+     */
+    public void showSuggestAddress() {
+        Intent intent = new Intent(this, SuggestAddress.class);
+        intent.putExtra("pref", (String)mSpnPref.getSelectedItem());
+        intent.putExtra("address", mEditAddress.getText().toString());
+        startActivityForResult(intent, REQ_SUGGEST_ADDRESS);
     }
 }
