@@ -93,43 +93,44 @@ public class SuggestAddress extends Activity {
      * サジェストを実装するため
      *
      */
-    class AddressDataTask extends AsyncTask<String, Void, String> {
+    class AddressDataTask extends AsyncTask<String, Void, ArrayList<String>> {
         
         private ProgressDialog mProgress;
 
         @Override
-        protected String doInBackground(String... params) {
+        protected ArrayList<String> doInBackground(String... params) {
             String pref = params[0];
             HashMap<String, String> map = new HashMap<String, String>();
             map.put("pref", pref);
-            String response = null;
-            try {
-                response = RestfulClient.Get(URL_PREF, map);
-            } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
+            ArrayList<String> items = AddressCache.getData(pref);
+            if (items == null) {
+                items = new ArrayList<String>();
+                try {
+                    String response = RestfulClient.Get(URL_PREF, map);
+                    JSONObject json = new JSONObject(response);
+                    JSONArray addresses = json.getJSONArray("addresses");
+                    for (int i = 0; i < addresses.length(); i++) {
+                        JSONObject data = addresses.getJSONObject(i);
+                        items.add(data.getString("address"));
+                    }
+                    AddressCache.setData(pref, items);
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
-            return response;
+            return items;
         }
 
         @Override
-        protected void onPostExecute(String result) {
-            try {
-                ArrayList<String> items = new ArrayList<String>();
-                JSONObject json = new JSONObject(result);
-                JSONArray addresses = json.getJSONArray("addresses");
-                for (int i = 0; i < addresses.length(); i++) {
-                    JSONObject data = addresses.getJSONObject(i);
-                    items.add(data.getString("address"));
-                }
-                mEditAddress.setAdapter(new ArrayAdapter<String>(
-                        SuggestAddress.this,
-                        android.R.layout.simple_dropdown_item_1line,
-                        items));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+        protected void onPostExecute(ArrayList<String> result) {
+            mEditAddress.setAdapter(new ArrayAdapter<String>(
+                    SuggestAddress.this,
+                    android.R.layout.simple_dropdown_item_1line,
+                    result));
             mProgress.dismiss();
         }
         
