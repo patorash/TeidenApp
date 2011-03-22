@@ -16,6 +16,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -88,6 +89,14 @@ public class SuggestAddress extends Activity {
         finish();
     }
 
+    /**
+     * 画面回転対策
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+    
     /**
      * 都県のアドレスデータを取得する
      * サジェストを実装するため

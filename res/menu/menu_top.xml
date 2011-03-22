@@ -5,6 +5,10 @@
         android:icon="@android:drawable/ic_menu_share"
         android:id="@+id/menu_share" />
     <item
+        android:title="@string/cm_on_off"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:id="@+id/menu_cm_on_off" />
+    <item
         android:title="@string/about_app"
         android:icon="@android:drawable/ic_menu_info_details"
         android:id="@+id/menu_about_app" />

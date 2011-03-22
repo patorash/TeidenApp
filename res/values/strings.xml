@@ -7,7 +7,9 @@
     <string name="tab_current_address">現在地</string>
     <string name="tab_search">地名検索</string>
     <string name="tab_history">検索履歴</string>
+    <string name="tab_group">グループ別</string>
     <string name="address_loading">データ取得中...</string>
+    <string name="teiden_loading">停電情報を取得中...</string>
     <string name="now_location_loading">...現在地を取得中...</string>
     <string name="data_loading">現在地が取れました。\nデータを取得中...</string>
     <string name="current_group">現在地のグループ：</string>
@@ -59,4 +61,19 @@
     <string name="description_suggest_address">計画停電対象の住所のみ、候補として表示されます。ないエリアは計画停電エリアから外れた可能性がありますので、一応、東京電力のサイトにてご確認ください。</string>
     <string name="pref">都県名：</string>
     <string name="decision">決定</string>
+    <string name="implore">作者からお願い</string>
+    <string name="description_cm">
+    アプリを使って頂いてありがとうございます。開発者より、皆様にお願いがあります。\n\n
+    本アプリのDL数が3月22日現在、70,000を超え、
+    サーバの負荷が急増して無料で使える分を使い切ってしまいました。
+    アプリとサーバの維持のために、誠に申し訳ありませんが広告を入れさせてもらうことにしました。\n\n
+    アプリ維持に協力して下さる方は、「広告ON」ボタンを押して下さい。
+    「広告OFF」ボタンを押しても、アプリは問題なく使えます。
+    また、後でメニューボタンより、広告表示のON/OFFを切り替えることが
+    できます。アプリ維持のために、よろしければご協力お願いします。
+    </string>
+    <string name="cooperate">広告ON</string>
+    <string name="ignore">広告OFF</string>
+    <string name="cm_on_off">広告ON/OFF</string>
+    <string name="caution_select_group">グループを選択して下さい</string>
 </resources>

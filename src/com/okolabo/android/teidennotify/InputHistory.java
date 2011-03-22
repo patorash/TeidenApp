@@ -2,6 +2,7 @@ package com.okolabo.android.teidennotify;
 
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
@@ -67,4 +68,13 @@ public class InputHistory extends ListActivity {
         setResult(RESULT_OK, intent);
         finish();
     }
+    
+    /**
+     * 画面回転対策
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
 }

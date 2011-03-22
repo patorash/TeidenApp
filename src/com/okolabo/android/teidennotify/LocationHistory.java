@@ -5,6 +5,7 @@ import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -153,5 +154,13 @@ public class LocationHistory extends ListActivity {
         intent.putExtra(LocationHistories.ADDRESS, address);
         setResult(RESULT_OK, intent);
         finish();
+    }
+    
+    /**
+     * 画面回転対策
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
     }
 }

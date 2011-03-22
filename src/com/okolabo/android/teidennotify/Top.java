@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jp.co.kayo.android.exceptionlib.ExceptionBinder;
+import jp.co.nobot.libAdMaker.libAdMaker;
 import net.it4myself.util.RestfulClient;
 
 import org.apache.http.client.ClientProtocolException;
@@ -26,6 +27,8 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.location.Address;
@@ -56,6 +59,7 @@ import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.okolabo.android.teidennotify.DatabaseHelper.Histories;
 import com.okolabo.android.teidennotify.DatabaseHelper.InputHistories;
@@ -97,14 +101,18 @@ public class Top extends Activity implements LocationListener{
     /**  */
     protected Geocoder mGeocoder;
     
-    
+    /** 都県のスピナー */
     private Spinner mSpnPref;
-    
+    /** 都県以降の住所を入力するエリア */
     private EditText mEditAddress;
+    /** グループのスピナー */
+    private Spinner mSpnGroup;
     
     private TabHost mTabs;
     
     private Calendar mCalendar;
+    
+    private libAdMaker mAdView;
     
     /** 今日の日付(365日で) */
     private int mCurrentDayOfYear;
@@ -178,7 +186,13 @@ public class Top extends Activity implements LocationListener{
         spec.setIndicator(getString(R.string.tab_history));
         mTabs.addTab(spec);
         
-        // スピナー
+        // グループスケジュールタブ
+        spec = mTabs.newTabSpec("tag4");
+        spec.setContent(R.id.tab4);
+        spec.setIndicator(getString(R.string.tab_group));
+        mTabs.addTab(spec);
+        
+        // 地域検索の都県のスピナー
         mSpnPref = (Spinner) findViewById(R.id.pref);
         ArrayAdapter<String> aa = new ArrayAdapter<String>(
                 this,
@@ -187,7 +201,7 @@ public class Top extends Activity implements LocationListener{
         aa.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpnPref.setAdapter(aa);
         
-        // テキスト
+        // 地域検索の都県以降の住所。直接修正はできない。
         mEditAddress = (EditText) findViewById(R.id.address);
         mEditAddress.setOnClickListener(new OnClickListener() {
             
@@ -204,6 +218,37 @@ public class Top extends Activity implements LocationListener{
                 addressSearch();
             }
         });
+        
+        // グループ停電予定のスピナー
+        mSpnGroup = (Spinner) findViewById(R.id.group);
+        ArrayAdapter<String> ag = new ArrayAdapter<String>(
+                this,
+                android.R.layout.simple_spinner_item,
+                getResources().getStringArray(R.array.groups));
+        ag.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSpnGroup.setAdapter(ag);
+        mSpnGroup.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                if (position > 0) {
+                    new GroupScheduleAsyncTask(position).execute();
+                }
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        // 広告表示に協力してくださる方のみに広告を表示
+        boolean cmFlg = Prefs.getCmFlg(this);
+        if (cmFlg) {
+            showCm();
+        }
+
+        // 初回表示だったら、アラートダイアログで広告表示に協力してくれるか聞く
+        boolean confirmFlg = Prefs.getConfirmFlg(this);
+        if (!confirmFlg) {
+            showConfirmCm();
+        }
     }
     
     /**
@@ -675,6 +720,11 @@ public class Top extends Activity implements LocationListener{
             case R.id.menu_about_app:
                 about_app();
                 break;
+                
+            case R.id.menu_cm_on_off:
+                // CMのON/OFFを変更する
+                showConfirmCm();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -705,11 +755,26 @@ public class Top extends Activity implements LocationListener{
             // 検索
             groupNumber = (TextView) findViewById(R.id.searchGroupNumber);
             teidenSpan = (TextView) findViewById(R.id.searchTeidenSpan);
-        } else {
+        } else if (current == "tag3"){
             // 履歴
             Toast.makeText(this, R.string.caution_select_row, Toast.LENGTH_SHORT).show();
             return;
+        } else {
+            // グループ別
+            if (mSpnGroup.getSelectedItemPosition() > 0) {
+                teidenSpan = (TextView) findViewById(R.id.groupTeidenSpan);
+                builder.append(teidenSpan.getText())
+                       .append("\n\n")
+                       .append(getString(R.string.cm_app));
+                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.mail_subject));
+                intent.putExtra(Intent.EXTRA_TEXT, builder.toString());
+                startActivity(intent);
+            } else {
+                Toast.makeText(this, R.string.caution_select_group, Toast.LENGTH_SHORT).show();
+            }
+            return;
         }
+        
         if (groupNumber.getText().toString().equals("")
                 || groupNumber.getText().toString().equals(getString(R.string.address_loading))
                 || groupNumber.getText().toString().equals(getString(R.string.out_of_area))) {
@@ -993,5 +1058,136 @@ public class Top extends Activity implements LocationListener{
         intent.putExtra("pref", (String)mSpnPref.getSelectedItem());
         intent.putExtra("address", mEditAddress.getText().toString());
         startActivityForResult(intent, REQ_SUGGEST_ADDRESS);
+    }
+    
+    /**
+     * 初回起動時に、広告表示への協力を聞くダイアログを表示する
+     */
+    private void showConfirmCm() {
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .setTitle(R.string.implore)
+                .setMessage(R.string.description_cm)
+                .setPositiveButton(R.string.cooperate, new DialogInterface.OnClickListener() {
+                    
+                    public void onClick(DialogInterface dialog, int which) {
+                        SharedPreferences prefs = Prefs.get(Top.this);
+                        Editor edit = prefs.edit();
+                        edit.putBoolean(Prefs.KEY_CONFIRM, true);
+                        edit.putBoolean(Prefs.KEY_CM, true);
+                        edit.commit();
+                        showCm();
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton(R.string.ignore, new DialogInterface.OnClickListener() {
+                    
+                    public void onClick(DialogInterface dialog, int which) {
+                        SharedPreferences prefs = Prefs.get(Top.this);
+                        Editor edit = prefs.edit();
+                        edit.putBoolean(Prefs.KEY_CONFIRM, true);
+                        edit.putBoolean(Prefs.KEY_CM, false);
+                        edit.commit();
+                        hideCm();
+                        dialog.dismiss();
+                    }
+                })
+                .create();
+        dialog.show();
+    }
+    
+    /**
+     * 広告を表示する
+     */
+    private void showCm() {
+        mAdView = null;
+        mAdView = (libAdMaker)findViewById(R.id.admakerview);
+        mAdView.setVisibility(libAdMaker.VISIBLE);
+        mAdView.setActivity(this);
+        mAdView.siteId = "212";
+        mAdView.zoneId = "2123";
+        mAdView.setUrl("http://images.ad-maker.info/apps/ibtwazn12a92.html");
+        mAdView.start();
+    }
+    
+    /**
+     * 広告を非表示にする
+     */
+    private void hideCm() {
+        if (mAdView != null) {
+            mAdView.setVisibility(libAdMaker.GONE);
+            mAdView = null;
+        }
+    }
+    
+    /**
+     * 指定されたグループの停電情報を非同期で取得、表示する
+     *
+     */
+    private class GroupScheduleAsyncTask extends AsyncTask<Void, Void, Void> {
+        
+        private ProgressDialog mProgress;
+        private int mGroup;
+
+        public GroupScheduleAsyncTask(int group) {
+            this.mGroup = group;
+        }
+        
+        @Override
+        protected void onPreExecute() {
+            // プログレスダイアログ表示
+            this.mProgress = new ProgressDialog(Top.this);
+            this.mProgress.setMessage(getString(R.string.teiden_loading));
+            this.mProgress.setIcon(android.R.drawable.ic_dialog_info);
+            this.mProgress.setIndeterminate(false);
+            this.mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            this.mProgress.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            String response;
+            // スケジュールのキャッシュがなければ、GAEからDLする
+            if (mSchedule == null) {
+                try {
+                    response = RestfulClient.Get(URL_SCHEDULE, null);
+                    mSchedule = new JSONObject(response);
+                } catch (ClientProtocolException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            super.onPostExecute(result);
+            // 日付があるだけスケジュールを表示する
+            SimpleDateFormat fmt = new SimpleDateFormat("MM月dd日(E)");
+            StringBuilder builder = new StringBuilder((String)mSpnGroup.getSelectedItem());
+            builder.append("\n");
+            JSONObject date;
+            try {
+                date = mSchedule.getJSONObject("date");
+                for (int dayOfYear = mCurrentDayOfYear; dayOfYear < mCurrentDayOfYear + date.length(); dayOfYear++) {
+                    mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
+                    String strDate = fmt.format(mCalendar.getTime());
+                    JSONArray schedules = date.getJSONArray(strDate);
+                    builder.append(strDate + "\n");
+                    // 日付によってグループの停電時刻が変わるのに対応する！
+                    String teidenGroupSpan = schedules.getString(mGroup - 1);
+                    builder.append(teidenGroupSpan + "\n\n");
+                }
+            } catch (JSONException e) {
+                // date.getJSONArray(strDate)で例外が発生するが、無視する
+                // e.printStackTrace();
+            }
+            ((TextView)findViewById(R.id.groupTeidenSpan)).setText(builder.toString());
+            this.mProgress.dismiss();
+        }
     }
 }

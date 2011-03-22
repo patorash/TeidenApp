@@ -3,15 +3,15 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="25"
-    android:versionName="1.9.1"
+    android:versionCode="26"
+    android:versionName="2.0.0"
     >
  -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="25"
-    android:versionName="1.9.1"
+    android:versionCode="26"
+    android:versionName="2.0.0"
     android:installLocation="preferExternal">
     <application
         android:icon="@drawable/icon"
@@ -31,13 +31,19 @@
             android:name="About">
         </activity>
         <activity
-            android:name="InputHistory">
+            android:name="InputHistory"
+            android:configChanges="orientation"
+            >
         </activity>
         <activity
-            android:name="LocationHistory">
+            android:name="LocationHistory"
+            android:configChanges="orientation"
+            >
         </activity>
         <activity
-            android:name="SuggestAddress">
+            android:name="SuggestAddress"
+            android:configChanges="orientation"
+            >
         </activity>
     </application>
     <uses-sdk android:minSdkVersion="4" />
@@ -45,6 +51,4 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <!-- エミュレータでGPSつかうときに必要 リリース時に削除すること -->
-    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
 </manifest> 

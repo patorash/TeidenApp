@@ -22,4 +22,12 @@
         <item>この履歴を削除</item>
         <item>キャンセル</item>
     </string-array>
+    <string-array name="groups">
+        <item>グループを選択して下さい</item>
+        <item>第１グループ</item>
+        <item>第２グループ</item>
+        <item>第３グループ</item>
+        <item>第４グループ</item>
+        <item>第５グループ</item>
+    </string-array>
 </resources>
