@@ -76,4 +76,10 @@
     <string name="ignore">広告OFF</string>
     <string name="cm_on_off">広告ON/OFF</string>
     <string name="caution_select_group">グループを選択して下さい</string>
+    <string name="call_touden">東電に確認</string>
+    <string name="call_touden_description">
+    東京電力の計画停電ご案内専用ダイヤル(0120-925-433)に電話をかけます。
+    よろしいですか？
+    </string>
+    <string name="call">かける</string>
 </resources>

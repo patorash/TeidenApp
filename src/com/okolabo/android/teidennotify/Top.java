@@ -271,6 +271,12 @@ public class Top extends Activity implements LocationListener{
         if (mLocationManager != null) {
             mLocationManager.removeUpdates(this);
         }
+        Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+        btnGetMyLocation.setEnabled(true);
+        btnGetMyLocation.setText(R.string.get_my_location);
+        ((TextView) findViewById(R.id.currentAddress)).setText("");
+        ((TextView) findViewById(R.id.groupNumber)).setText("");
+        ((TextView) findViewById(R.id.teidenSpan)).setText("");
     }
     
     @Override
@@ -725,6 +731,11 @@ public class Top extends Activity implements LocationListener{
                 // CMのON/OFFを変更する
                 showConfirmCm();
                 break;
+                
+            case R.id.menu_call_touden:
+                // 東京電力に電話をかける
+                callTouden();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -819,14 +830,14 @@ public class Top extends Activity implements LocationListener{
                     0,
                     0,
                     this);
+            // 取得中に変更
+            Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
+            btnGetMyLocation.setEnabled(false);
+            btnGetMyLocation.setText(R.string.now_location_loading);
+            ((TextView) findViewById(R.id.currentAddress)).setText(R.string.address_loading);
+            ((TextView) findViewById(R.id.groupNumber)).setText(R.string.address_loading);
+            ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.address_loading);
         }
-        // 取得中に変更
-        Button btnGetMyLocation = (Button) findViewById(R.id.btnGetMyLocation);
-        btnGetMyLocation.setEnabled(false);
-        btnGetMyLocation.setText(R.string.now_location_loading);
-        ((TextView) findViewById(R.id.currentAddress)).setText(R.string.address_loading);
-        ((TextView) findViewById(R.id.groupNumber)).setText(R.string.address_loading);
-        ((TextView) findViewById(R.id.teidenSpan)).setText(R.string.address_loading);
         // 現在地取得中を表示
 //        new LocationAsyncTask().execute();
     }
@@ -1189,5 +1200,33 @@ public class Top extends Activity implements LocationListener{
             ((TextView)findViewById(R.id.groupTeidenSpan)).setText(builder.toString());
             this.mProgress.dismiss();
         }
+    }
+    
+    /**
+     * 計画停電ご案内専用ダイヤルにかける
+     */
+    private void callTouden() {
+        AlertDialog dialog = new AlertDialog.Builder(Top.this)
+        .setIcon(android.R.drawable.ic_dialog_dialer)
+        .setTitle(R.string.call_touden)
+        .setMessage(R.string.call_touden_description)
+        .setPositiveButton(R.string.call, new DialogInterface.OnClickListener() {
+            
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent();
+                intent.setAction(Intent.ACTION_CALL);
+                intent.setData(Uri.parse("tel:0120-925-433"));
+                startActivity(intent);
+                dialog.dismiss();
+            }
+        })
+        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        })
+        .create();
+        dialog.show();
     }
 }
