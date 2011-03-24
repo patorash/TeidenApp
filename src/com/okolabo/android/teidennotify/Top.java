@@ -736,6 +736,10 @@ public class Top extends Activity implements LocationListener{
                 // 東京電力に電話をかける
                 callTouden();
                 break;
+                
+            case R.id.menu_support_app:
+                showSupportApp();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -1228,5 +1232,13 @@ public class Top extends Activity implements LocationListener{
         })
         .create();
         dialog.show();
+    }
+    
+    /**
+     * 掲示板を表示する
+     */
+    private void showSupportApp() {
+        Intent intent = new Intent(this, SupportBbs.class);
+        startActivity(intent);
     }
 }

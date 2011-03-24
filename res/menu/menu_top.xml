@@ -17,6 +17,10 @@
         android:icon="@android:drawable/ic_menu_info_details"
         android:id="@+id/menu_about_app" />
     <item
+        android:title="@string/support_app"
+        android:icon="@android:drawable/ic_menu_help"
+        android:id="@+id/menu_support_app" />
+    <item
         android:title="@string/finish"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"
         android:id="@+id/menu_finish" />
