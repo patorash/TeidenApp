@@ -1126,6 +1126,7 @@ public class Top extends Activity implements LocationListener{
         mAdView.siteId = "212";
         mAdView.zoneId = "2123";
         mAdView.setUrl("http://images.ad-maker.info/apps/ibtwazn12a92.html");
+        mAdView.setBackgroundColor(android.R.color.transparent);
         mAdView.start();
     }
     
