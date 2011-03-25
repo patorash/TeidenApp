@@ -53,6 +53,13 @@
                         <ImageButton
                             android:layout_width="48dip"
                             android:layout_height="48dip"
+                            android:src="@android:drawable/ic_menu_mapmode"
+                            android:adjustViewBounds="true"
+                            android:onClick="showMap"
+                            />
+                        <ImageButton
+                            android:layout_width="48dip"
+                            android:layout_height="48dip"
                             android:src="@android:drawable/ic_menu_recent_history"
                             android:adjustViewBounds="true"
                             android:onClick="showLocationHistory"

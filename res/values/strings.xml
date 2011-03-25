@@ -2,7 +2,10 @@
 <resources>
     <string name="app_name">計画停電情報</string>
     <string name="app_name_top">計画停電\n情報</string>
-    <string name="android_exception_service_id">pbTP05jKFN5FCNgqPc9I8F1SJhP7PDaEBLL88DIa</string>
+    <string name="android_exception_service_id">pbTP05jKFN5FCNgqPc9I8F1SJhP7PDaEBLL88DIa
+    </string>
+    <string name="api_key_debug">0UEVtDJo7VHZLRr-UBvratoeFqc-fvcRYgrRaJA</string>
+    <string name="api_key_release">0UEVtDJo7VHYiIoTi5ap__1opr3R-DgqTEGGifQ</string>
     <string name="current_address">現在地：</string>
     <string name="tab_current_address">現在地</string>
     <string name="tab_search">地名検索</string>
@@ -16,7 +19,8 @@
     <string name="dai">第</string>
     <string name="group">グループ</string>
     <string name="teiden_span">停電時間帯：</string>
-    <string name="out_of_area">計画停電エリア外か、エリアから外れた可能性があります。東京電力のサイトをご確認ください。</string>
+    <string name="out_of_area">計画停電エリア外か、エリアから外れた可能性があります。東京電力のサイトをご確認ください。
+    </string>
     <string name="search_address">地名を指定：</string>
     <string name="hint_edit_address">例：○○市××町2丁目</string>
     <string name="completion_hint_edit_address">対象エリアのみ候補が出ます</string>
@@ -27,13 +31,15 @@
     <string name="please_show_result">結果が表示されてから行って下さい</string>
     <string name="mail_subject">計画停電情報</string>
     <string name="cm_app">この情報はAndroidアプリ「計画停電情報」より送信しています。\n
-    https://market.android.com/details?id=com.okolabo.android.teidennotify</string>
+        https://market.android.com/details?id=com.okolabo.android.teidennotify
+    </string>
     <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。多少時間はかかります。
-    取れなくなったらメニューのアプリについてから連絡お願いします。</string>
+        取れなくなったらメニューのアプリについてから連絡お願いします。</string>
     <string name="caution_search">検索候補表示に対応しました。\n停電エリアのみ候補に出ます。</string>
     <string name="about_app">アプリについて</string>
     <string name="get_my_location">現在地を取得</string>
-    <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。</string>
+    <string name="teiden_span_unknown">データが検出できませんでした。メニュー > アプリについてより、東京電力のサイトをご覧下さい。
+    </string>
     <string name="month">月</string>
     <string name="day">日の予定</string>
     <string name="show_history">検索履歴を表示・更新</string>
@@ -53,24 +59,26 @@
     <string name="menu_location_history">タップ > 検索／長押し > メニュー</string>
     <string name="zip_search">郵便番号検索</string>
     <string name="hint_zipcode">郵便番号-なしで入力</string>
-    <string name="no_zip_search_description">郵便番号検索アプリが見つかりませんでした。マーケットに移動してもよろしいですか？</string>
+    <string name="no_zip_search_description">郵便番号検索アプリが見つかりませんでした。マーケットに移動してもよろしいですか？
+    </string>
     <string name="move">移動する</string>
     <string name="no_hit_zipcode">計画停電対象外の都道府県です</string>
     <string name="please_select_pref">都県を選択して下さい</string>
     <string name="data_load_pref">市区町村データをロード中...\n計画停電エリアのみ候補に出ます</string>
-    <string name="description_suggest_address">計画停電対象の住所のみ、候補として表示されます。ないエリアは計画停電エリアから外れた可能性がありますので、一応、東京電力のサイトにてご確認ください。</string>
+    <string name="description_suggest_address">計画停電対象の住所のみ、候補として表示されます。ないエリアは計画停電エリアから外れた可能性がありますので、一応、東京電力のサイトにてご確認ください。
+    </string>
     <string name="pref">都県名：</string>
     <string name="decision">決定</string>
     <string name="implore">作者からお願い</string>
     <string name="description_cm">
-    アプリを使って頂いてありがとうございます。開発者より、皆様にお願いがあります。\n\n
-    本アプリのDL数が3月22日現在、70,000を超え、
-    サーバの負荷が急増して無料で使える分を使い切ってしまいました。
-    アプリとサーバの維持のために、誠に申し訳ありませんが広告を入れさせてもらうことにしました。\n\n
-    アプリ維持に協力して下さる方は、「広告ON」ボタンを押して下さい。
-    「広告OFF」ボタンを押しても、アプリは問題なく使えます。
-    また、後でメニューボタンより、広告表示のON/OFFを切り替えることが
-    できます。アプリ維持のために、よろしければご協力お願いします。
+        アプリを使って頂いてありがとうございます。開発者より、皆様にお願いがあります。\n\n
+        本アプリのDL数が3月22日現在、70,000を超え、
+        サーバの負荷が急増して無料で使える分を使い切ってしまいました。
+        アプリとサーバの維持のために、誠に申し訳ありませんが広告を入れさせてもらうことにしました。\n\n
+        アプリ維持に協力して下さる方は、「広告ON」ボタンを押して下さい。
+        「広告OFF」ボタンを押しても、アプリは問題なく使えます。
+        また、後でメニューボタンより、広告表示のON/OFFを切り替えることが
+        できます。アプリ維持のために、よろしければご協力お願いします。
     </string>
     <string name="cooperate">広告ON</string>
     <string name="ignore">広告OFF</string>
@@ -78,10 +86,22 @@
     <string name="caution_select_group">グループを選択して下さい</string>
     <string name="call_touden">東電に確認</string>
     <string name="call_touden_description">
-    東京電力の計画停電ご案内専用ダイヤル(0120-925-433)に電話をかけます。
-    よろしいですか？
+        東京電力の計画停電ご案内専用ダイヤル(0120-925-433)に電話をかけます。
+        よろしいですか？
     </string>
     <string name="call">かける</string>
     <string name="back">アプリに戻る</string>
     <string name="support_app">サポート掲示板</string>
+    <string name="menu_my_location">現在地</string>
+    <string name="menu_search">検索</string>
+    <string name="menu_setting_place">場所決定</string>
+    <string name="no_result_search_address">検索した地名が見つかりませんでした</string>
+    <string name="null_carrent_location">まだ位置情報の取得ができていません</string>
+    <string name="ok">OK</string>
+    <string name="title_gps_disabled">GPS設定</string>
+    <string name="message_gps_disabled">GPSが起動していないため、現在地を取得できません。GPS設定画面を開かれる場合はOKボタンを押してください。
+    </string>
+    <string name="title_select_address">住所を選択</string>
+    <string name="search_label">地図上で地名検索</string>
+    <string name="search_hint">地名を入力</string>
 </resources>

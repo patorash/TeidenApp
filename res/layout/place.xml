@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="fill_parent"
+    android:layout_width="fill_parent"
+    android:orientation="vertical"
+    >
+    <!-- リリース用APIKEYを使用 -->
+    <com.google.android.maps.MapView
+        android:id="@+id/mapview"
+        android:enabled="true"
+        android:clickable="true"
+        android:layout_height="fill_parent"
+        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:apiKey="@string/api_key_release" />
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:layout_gravity="center">
+        <Button android:layout_height="wrap_content"
+            android:text="@string/menu_my_location"
+            android:id="@+id/btnMenuMyLocation"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            />
+        <Button
+            android:layout_height="wrap_content"
+            android:text="@string/menu_search"
+            android:id="@+id/btnMenuSearch"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            />
+        <Button
+            android:layout_height="wrap_content"
+            android:text="@string/menu_setting_place"
+            android:id="@+id/btnMenuSettingPlace"
+            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            />
+    </LinearLayout>
+</LinearLayout>

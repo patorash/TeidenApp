@@ -79,6 +79,8 @@ public class Top extends Activity implements LocationListener{
     private static final int REQ_SEARCH_ZIPCODE = 3;
     // 住所入力のリクエストコード
     private static final int REQ_SUGGEST_ADDRESS = 4;
+    // 地図での場所設定のリクエストコード
+    private static final int REQ_PLACE = 5;
     
     
     private static final HashMap<String, String> TEIDEN_URL_LIST;
@@ -1013,6 +1015,15 @@ public class Top extends Activity implements LocationListener{
                     mEditAddress.setText(address);
 //                    addressSearch();
                 }
+                break;
+                
+            case REQ_PLACE:
+                if (resultCode == RESULT_OK) {
+                    Bundle b = data.getExtras();
+                    String locationHistoryAddress = b.getString("address");
+                    setCurrentLocationInfo(locationHistoryAddress);
+                }
+                break;
         }
     }
     
@@ -1245,5 +1256,14 @@ public class Top extends Activity implements LocationListener{
     private void showSupportApp() {
         Intent intent = new Intent(this, SupportBbs.class);
         startActivity(intent);
+    }
+    
+    /**
+     * 場所を取得する地図を表示する
+     * @param v
+     */
+    public void showMap(View v) {
+        Intent intent = new Intent(this, Place.class);
+        startActivityForResult(intent, REQ_PLACE);
     }
 }
