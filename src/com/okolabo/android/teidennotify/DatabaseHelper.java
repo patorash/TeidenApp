@@ -210,6 +210,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return mDB.delete(TBL_INPUT_HISTRIES, where, placeHolder);
     }
     
+    /**
+     * 都県と住所で指定された入力履歴を消す
+     * @param pref
+     * @param address
+     * @return
+     */
+    public int deleteInputHistoryByPrefAndAddress(String pref, String address) {
+        checkOpen();
+        String where = InputHistories.PREF + " = ? AND " + InputHistories.ADDRESS + " = ?";
+        String[] placeHolder = {
+                pref,
+                address
+        };
+        return mDB.delete(TBL_INPUT_HISTRIES, where, placeHolder);
+    }
+    
+
     //
     // 以下、LocationHistories
     //
@@ -234,14 +251,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     
     
 
-    /** 入力履歴を全件取得 */
+    /** 現在地履歴を全件取得 */
     public Cursor getAllLocationHistories() {
         checkOpen();
         String orderBy = LocationHistories.ID + " DESC";
         return mDB.query(TBL_LOCATION_HISTORIES, null, null, null, null, null, orderBy);
     }
     
-    /** 指定した入力履歴を取得 */
+    /** 指定した現在地履歴を取得 */
     public Cursor getLocationHistory(long id) {
         checkOpen();
         String where = LocationHistories.ID + " = ?";
@@ -251,7 +268,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return mDB.query(TBL_LOCATION_HISTORIES, null, where, placeHolder, null, null, null);
     }
 
-    /** 入力履歴を消す */
+    /** 現在地履歴を消す */
     public int deleteLocationHistory(long id) {
         checkOpen();
         String where = LocationHistories.ID + " = ?";

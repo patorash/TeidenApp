@@ -611,6 +611,10 @@ public class Top extends Activity implements LocationListener{
                                             if (!(pref.equals(mInputHistoryPref)
                                                     && address.equals(mInputHistoryAddress))) {
                                                 mDBHelper.insertInputHistories(pref, address);
+                                            } else {
+                                                // 前のを消して、再インサート
+                                                mDBHelper.deleteInputHistoryByPrefAndAddress(pref, address);
+                                                mDBHelper.insertInputHistories(pref, address);
                                             }
                                         }
                                         break;
