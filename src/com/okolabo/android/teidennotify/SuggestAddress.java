@@ -111,6 +111,7 @@ public class SuggestAddress extends Activity {
             String pref = params[0];
             HashMap<String, String> map = new HashMap<String, String>();
             map.put("pref", pref);
+            map.put("v", Version.PREF_2);
             ArrayList<String> items = AddressCache.getData(pref);
             if (items == null) {
                 items = new ArrayList<String>();

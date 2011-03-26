@@ -160,6 +160,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return mDB.delete(TBL_HISTORIES, where, placeHolder);
     }
     
+    /**
+     * 同じ内容のものを削除する
+     * @param history
+     * @return
+     */
+    public int deleteByHistory(String history) {
+        checkOpen();
+        String where = Histories.HISTORY + " = ?";
+        String[] placeHolder = {
+                history
+        };
+        return mDB.delete(TBL_HISTORIES, where, placeHolder);
+    }
+    
     //
     // 以下、InputHistories
     //
@@ -310,9 +324,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         checkOpen();
         ContentValues cv = new ContentValues();
         cv.put(LocationHistories.TITLE, title);
-        return mDB.update(TBL_LOCATION_HISTORIES, cv, LocationHistories.ID + " = ?", new String[] {
+        String where = LocationHistories.ID + " = ?";
+        String[] placeHolder = {
             String.valueOf(id)
-        });
+        };
+        return mDB.update(TBL_LOCATION_HISTORIES, cv, where, placeHolder);
     }
     
     /**

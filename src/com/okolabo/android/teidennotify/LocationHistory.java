@@ -36,11 +36,34 @@ public class LocationHistory extends ListActivity {
         
         mDBHelper = new DatabaseHelper(this);
         
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mCursor = mDBHelper.getAllLocationHistories();
+        startManagingCursor(mCursor);
+        if (mCursor.getCount() == 0) {
+            Toast.makeText(this, R.string.no_location_history, Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        String[] from = {LocationHistories.TITLE, LocationHistories.ADDRESS};
+        int[] to = {android.R.id.text1,
+                    android.R.id.text2};
+        mAdapter = new SimpleCursorAdapter(
+                this,
+                R.layout.row_location_history,
+                mCursor,
+                from,
+                to
+                );
+        setListAdapter(mAdapter);
         ListView listView = getListView();
         listView.setOnItemLongClickListener(new OnItemLongClickListener() {
 
-            public boolean onItemLongClick(final AdapterView<?> parent, final View v, int position, long id) {
-                // TODO AlertDialogを表示して、タイトルの変更、履歴の削除、キャンセルなどを実装
+            public boolean onItemLongClick(final AdapterView<?> parent, final View v, final int position, long id) {
+                // AlertDialogを表示して、タイトルの変更、履歴の削除、キャンセルなどを実装
                 mCursor.moveToPosition(position);
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                         LocationHistory.this,
@@ -77,8 +100,10 @@ public class LocationHistory extends ListActivity {
                                                 .setPositiveButton(R.string.save, new OnClickListener() {
                                                     
                                                     public void onClick(DialogInterface dialog, int which) {
-                                                        long id = mCursor.getLong(mCursor.getColumnIndex(LocationHistories.ID));
-                                                        String title = ((EditText)dv.findViewById(R.id.title_location_history)).getText().toString();
+                                                        // カーソルの移動がうまくいってないので、ここで再度カーソルを移動させておく
+                                                        mCursor.moveToPosition(position);
+                                                        final long id = mCursor.getLong(mCursor.getColumnIndex(LocationHistories.ID));
+                                                        final String title = ((EditText)dv.findViewById(R.id.title_location_history)).getText().toString();
                                                         mDBHelper.updateLocationTitle(id, title);
                                                         mCursor = mDBHelper.getAllLocationHistories();
                                                         mAdapter.changeCursor(mCursor);
@@ -97,7 +122,7 @@ public class LocationHistory extends ListActivity {
                                         
                                     case 2:
                                         // 履歴の削除
-                                        long id = mCursor.getLong(mCursor.getColumnIndex(LocationHistories.ID));
+                                        final long id = mCursor.getLong(mCursor.getColumnIndex(LocationHistories.ID));
                                         mDBHelper.deleteLocationHistory(id);
                                         mCursor = mDBHelper.getAllLocationHistories();
                                         mAdapter.changeCursor(mCursor);
@@ -116,28 +141,6 @@ public class LocationHistory extends ListActivity {
                 return false;
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mCursor = mDBHelper.getAllLocationHistories();
-        startManagingCursor(mCursor);
-        if (mCursor.getCount() == 0) {
-            Toast.makeText(this, R.string.no_location_history, Toast.LENGTH_SHORT).show();
-            finish();
-        }
-        String[] from = {LocationHistories.TITLE, LocationHistories.ADDRESS};
-        int[] to = {android.R.id.text1,
-                    android.R.id.text2};
-        mAdapter = new SimpleCursorAdapter(
-                this,
-                R.layout.row_location_history,
-                mCursor,
-                from,
-                to
-                );
-        setListAdapter(mAdapter);
     }
     
     @Override

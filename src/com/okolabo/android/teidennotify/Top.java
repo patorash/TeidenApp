@@ -137,6 +137,36 @@ public class Top extends Activity implements LocationListener{
     /** 停電スケジュールをキャッシュするJSONObject */
     private JSONObject mSchedule = null;
     
+    /** サブグループ */
+    private static final String[] mSubGroups = new String[]{
+        "",
+        "1-A",
+        "1-B",
+        "1-C",
+        "1-D",
+        "1-E",
+        "2-A",
+        "2-B",
+        "2-C",
+        "2-D",
+        "2-E",
+        "3-A",
+        "3-B",
+        "3-C",
+        "3-D",
+        "3-E",
+        "4-A",
+        "4-B",
+        "4-C",
+        "4-D",
+        "4-E",
+        "5-A",
+        "5-B",
+        "5-C",
+        "5-D",
+        "5-E"
+    };
+    
     static {
         TEIDEN_URL_LIST = new HashMap<String, String>();
         TEIDEN_URL_LIST.put("東京都", "http://mainichi.jp/select/weathernews/20110311/mai/keikakuteiden/tokyo.html");
@@ -233,7 +263,7 @@ public class Top extends Activity implements LocationListener{
 
             public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
                 if (position > 0) {
-                    new GroupScheduleAsyncTask(position).execute();
+                    new GroupScheduleAsyncTask(mSubGroups[position]).execute();
                 }
             }
 
@@ -468,7 +498,7 @@ public class Top extends Activity implements LocationListener{
      * 非同期で検索する
      *
      */
-    private class SearchAsyncTask extends AsyncTask<Void, Void, HashMap<String, ArrayList<Integer>>> {
+    private class SearchAsyncTask extends AsyncTask<Void, Void, HashMap<String, ArrayList<String>>> {
 
         private ProgressDialog mProgress;
         private int mMode;
@@ -480,12 +510,14 @@ public class Top extends Activity implements LocationListener{
         }
         
         @Override
-        protected HashMap<String, ArrayList<Integer>> doInBackground(Void... params) {
+        protected HashMap<String, ArrayList<String>> doInBackground(Void... params) {
             String response;
             // スケジュールのキャッシュがなければ、GAEからDLする
             if (mSchedule == null) {
                 try {
-                    response = RestfulClient.Get(URL_SCHEDULE, null);
+                    HashMap<String, String> map = new HashMap<String, String>();
+                    map.put("v", Version.SCHEDULE_2);
+                    response = RestfulClient.Get(URL_SCHEDULE, map);
                     mSchedule = new JSONObject(response);
                 } catch (ClientProtocolException e) {
                     e.printStackTrace();
@@ -496,16 +528,17 @@ public class Top extends Activity implements LocationListener{
                 }
             }
             // 住所がどのグループに属しているかGAEに問い合わせる
-            HashMap<String, ArrayList<Integer>> result = new HashMap<String, ArrayList<Integer>>();
+            HashMap<String, ArrayList<String>> result = new HashMap<String, ArrayList<String>>();
             try {
                 HashMap<String, String> map = new HashMap<String, String>();
                 map.put("address", mStrAddress);
+                map.put("v", Version.GROUP_2);
                 response = RestfulClient.Get(URL_GROUP, map);
                 JSONObject json = new JSONObject(response);
-                ArrayList<Integer> groups = new ArrayList<Integer>();
+                ArrayList<String> groups = new ArrayList<String>();
                 JSONArray groupsJson = json.getJSONArray("groups");
                 for (int i = 0; i < groupsJson.length(); i++) {
-                    groups.add(groupsJson.getInt(i));
+                    groups.add(groupsJson.getString(i));
                 }
                 result.put(json.getString("address"), groups);
             } catch (ClientProtocolException e) {
@@ -520,7 +553,7 @@ public class Top extends Activity implements LocationListener{
         }
 
         @Override
-        protected void onPostExecute(HashMap<String, ArrayList<Integer>> areaMap) {
+        protected void onPostExecute(HashMap<String, ArrayList<String>> areaMap) {
             TextView groupNumber = null;
             TextView teidenSpan = null;
             String pref = null, address = null;
@@ -554,12 +587,13 @@ public class Top extends Activity implements LocationListener{
                 Matcher matcher = pattern.matcher(mStrAddress);
                 if (matcher.find()) {
                     hit_flg = true;
-                    ArrayList<Integer> groups = areaMap.get(areaName);
+                    ArrayList<String> groups = areaMap.get(areaName);
                     StringBuilder groupBuilder = new StringBuilder();
                     StringBuilder teidenBuilder = new StringBuilder();
-                    for (Integer group : groups) {
+                    groupBuilder.append(areaName + "\n");
+                    for (String group : groups) {
                         // グループ情報を記述
-                        groupBuilder.append(areaName + " " + getString(R.string.dai) + group + getString(R.string.group) + "\n");
+                        groupBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
                     }
                     
                     // 日付があるだけスケジュールを表示する
@@ -569,11 +603,11 @@ public class Top extends Activity implements LocationListener{
                         for (int dayOfYear = mCurrentDayOfYear; dayOfYear < mCurrentDayOfYear + date.length(); dayOfYear++) {
                             mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
                             String strDate = fmt.format(mCalendar.getTime());
-                            JSONArray schedules = date.getJSONArray(strDate);
+                            JSONObject schedules = date.getJSONObject(strDate);
                             teidenBuilder.append(strDate + "\n");
-                            for (Integer group : groups) {
+                            for (String group : groups) {
                                 // 日付によってグループの停電時刻が変わるのに対応する！
-                                String teidenGroupSpan = schedules.getString(group - 1);
+                                String teidenGroupSpan = schedules.getString(group);
                                 // グループ名を前に記述
                                 teidenBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
                                 teidenBuilder.append(teidenGroupSpan + "\n");
@@ -593,11 +627,12 @@ public class Top extends Activity implements LocationListener{
                             } else {
                                 teidenSpan.setText(teidenBuilder.toString());
                                 // 履歴をDBに保存する
-                                mDBHelper.insertHistories(
-                                        groupBuilder.toString()
-                                        + "\n"
-                                        + teidenBuilder.toString()
-                                );
+                                String history = groupBuilder.toString()
+                                                    + "\n"
+                                                    + teidenBuilder.toString();
+                                // 同じ内容の履歴を削除
+                                mDBHelper.deleteByHistory(history);
+                                mDBHelper.insertHistories(history);
                                 switch (mMode) {
                                     case TEIDEN_LOCATION:
                                         if (!mDBHelper.existsLocation(mStrAddress)) {
@@ -609,15 +644,9 @@ public class Top extends Activity implements LocationListener{
                                     case TEIDEN_SEARCH:
                                         // ヒットしたパターンだけ、入力履歴に保存
                                         if (pref != null && address != null) {
-                                            // 入力履歴から復元したパターンは除外して保存
-                                            if (!(pref.equals(mInputHistoryPref)
-                                                    && address.equals(mInputHistoryAddress))) {
-                                                mDBHelper.insertInputHistories(pref, address);
-                                            } else {
-                                                // 前のを消して、再インサート
-                                                mDBHelper.deleteInputHistoryByPrefAndAddress(pref, address);
-                                                mDBHelper.insertInputHistories(pref, address);
-                                            }
+                                            // 前のを消して、再インサート
+                                            mDBHelper.deleteInputHistoryByPrefAndAddress(pref, address);
+                                            mDBHelper.insertInputHistories(pref, address);
                                         }
                                         break;
                                 }
@@ -1158,9 +1187,9 @@ public class Top extends Activity implements LocationListener{
     private class GroupScheduleAsyncTask extends AsyncTask<Void, Void, Void> {
         
         private ProgressDialog mProgress;
-        private int mGroup;
+        private String mGroup;
 
-        public GroupScheduleAsyncTask(int group) {
+        public GroupScheduleAsyncTask(String group) {
             this.mGroup = group;
         }
         
@@ -1181,7 +1210,9 @@ public class Top extends Activity implements LocationListener{
             // スケジュールのキャッシュがなければ、GAEからDLする
             if (mSchedule == null) {
                 try {
-                    response = RestfulClient.Get(URL_SCHEDULE, null);
+                    HashMap<String, String> map = new HashMap<String, String>();
+                    map.put("v", Version.SCHEDULE_2);
+                    response = RestfulClient.Get(URL_SCHEDULE, map);
                     mSchedule = new JSONObject(response);
                 } catch (ClientProtocolException e) {
                     e.printStackTrace();
@@ -1207,10 +1238,10 @@ public class Top extends Activity implements LocationListener{
                 for (int dayOfYear = mCurrentDayOfYear; dayOfYear < mCurrentDayOfYear + date.length(); dayOfYear++) {
                     mCalendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
                     String strDate = fmt.format(mCalendar.getTime());
-                    JSONArray schedules = date.getJSONArray(strDate);
+                    JSONObject schedules = date.getJSONObject(strDate);
                     builder.append(strDate + "\n");
                     // 日付によってグループの停電時刻が変わるのに対応する！
-                    String teidenGroupSpan = schedules.getString(mGroup - 1);
+                    String teidenGroupSpan = schedules.getString(mGroup);
                     builder.append(teidenGroupSpan + "\n\n");
                 }
             } catch (JSONException e) {

@@ -24,10 +24,30 @@
     </string-array>
     <string-array name="groups">
         <item>グループを選択して下さい</item>
-        <item>第１グループ</item>
-        <item>第２グループ</item>
-        <item>第３グループ</item>
-        <item>第４グループ</item>
-        <item>第５グループ</item>
+        <item>第1-Aグループ</item>
+        <item>第1-Bグループ</item>
+        <item>第1-Cグループ</item>
+        <item>第1-Dグループ</item>
+        <item>第1-Eグループ</item>
+        <item>第2-Aグループ</item>
+        <item>第2-Bグループ</item>
+        <item>第2-Cグループ</item>
+        <item>第2-Dグループ</item>
+        <item>第2-Eグループ</item>
+        <item>第3-Aグループ</item>
+        <item>第3-Bグループ</item>
+        <item>第3-Cグループ</item>
+        <item>第3-Dグループ</item>
+        <item>第3-Eグループ</item>
+        <item>第4-Aグループ</item>
+        <item>第4-Bグループ</item>
+        <item>第4-Cグループ</item>
+        <item>第4-Dグループ</item>
+        <item>第4-Eグループ</item>
+        <item>第5-Aグループ</item>
+        <item>第5-Bグループ</item>
+        <item>第5-Cグループ</item>
+        <item>第5-Dグループ</item>
+        <item>第5-Eグループ</item>
     </string-array>
 </resources>
