@@ -15,4 +15,9 @@ public interface Version {
      * API schedule
      */
     public static final String SCHEDULE_2 = "2011-03-26";
+    
+    /**
+     * API schedule
+     */
+    public static final String SCHEDULE_3 = "2011-03-30";
 }

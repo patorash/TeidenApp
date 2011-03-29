@@ -237,12 +237,26 @@
                 android:layout_height="fill_parent"
                 android:orientation="vertical"
                 >
-                <Spinner
-                    android:id="@+id/group"
+                <LinearLayout
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:drawSelectorOnTop="true"
-                    />
+                    android:orientation="horizontal"
+                    >
+                    <Spinner
+                        android:id="@+id/group"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:drawSelectorOnTop="true"
+                        android:layout_weight="1"
+                        />
+                    <ImageButton
+                        android:src="@android:drawable/ic_menu_today"
+                        android:layout_width="48dip"
+                        android:layout_height="48dip"
+                        android:adjustViewBounds="true"
+                        android:onClick="writeSchedule"
+                        />
+                </LinearLayout>
                 <ScrollView
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
@@ -253,6 +267,7 @@
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         style="@style/Text"
+                        android:onClick=""
                         />
                 </ScrollView>
             </LinearLayout>

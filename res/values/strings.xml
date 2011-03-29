@@ -2,8 +2,7 @@
 <resources>
     <string name="app_name">計画停電情報</string>
     <string name="app_name_top">計画停電\n情報</string>
-    <string name="android_exception_service_id">pbTP05jKFN5FCNgqPc9I8F1SJhP7PDaEBLL88DIa
-    </string>
+    <string name="android_exception_service_id">pbTP05jKFN5FCNgqPc9I8F1SJhP7PDaEBLL88DIa</string>
     <string name="api_key_debug">0UEVtDJo7VHZLRr-UBvratoeFqc-fvcRYgrRaJA</string>
     <string name="api_key_release">0UEVtDJo7VHYiIoTi5ap__1opr3R-DgqTEGGifQ</string>
     <string name="current_address">現在地：</string>
@@ -42,7 +41,7 @@
     </string>
     <string name="month">月</string>
     <string name="day">日の予定</string>
-    <string name="show_history">検索履歴を表示・更新</string>
+    <string name="show_history">検索履歴を表示・再読込み</string>
     <string name="search_date">検索実施時刻：</string>
     <string name="delete_history">削除しました</string>
     <string name="caution_select_row">履歴をタップしてください</string>
@@ -104,4 +103,11 @@
     <string name="title_select_address">住所を選択</string>
     <string name="search_label">地図上で地名検索</string>
     <string name="search_hint">地名を入力</string>
+    <string name="title_set_schedule">スケジュールに設定</string>
+    <string name="cannot_get_schedule">計画停電が判っている日付を指定してください</string>
+    <string name="plan_teiden">計画停電</string>
+    <string name="please_select_group">まずグループを選択してください</string>
+    <string name="description_regist_calendar">指定された日付の予定をカレンダーに登録します</string>
+    <string name="regist_calendar">カレンダーに登録しました。停電予定10分前にアラームで通知します。</string>
+    <string name="regist_calendar_no_alarm">カレンダーに登録しました。予定が中止のためアラーム通知はしません。</string>
 </resources>

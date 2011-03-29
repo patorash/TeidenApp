@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,8 +23,12 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.app.ProgressDialog;
+import android.app.DatePickerDialog.OnDateSetListener;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,6 +44,7 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -51,6 +57,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CursorAdapter;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -516,7 +523,7 @@ public class Top extends Activity implements LocationListener{
             if (mSchedule == null) {
                 try {
                     HashMap<String, String> map = new HashMap<String, String>();
-                    map.put("v", Version.SCHEDULE_2);
+                    map.put("v", Version.SCHEDULE_3);
                     response = RestfulClient.Get(URL_SCHEDULE, map);
                     mSchedule = new JSONObject(response);
                 } catch (ClientProtocolException e) {
@@ -607,10 +614,19 @@ public class Top extends Activity implements LocationListener{
                             teidenBuilder.append(strDate + "\n");
                             for (String group : groups) {
                                 // 日付によってグループの停電時刻が変わるのに対応する！
-                                String teidenGroupSpan = schedules.getString(group);
+                                StringBuilder teidenGroupSpan = new StringBuilder();
+                                JSONArray teidens = schedules.getJSONArray(group);
+                                for (int i = 0; i < teidens.length(); i++) {
+                                    JSONObject teiden = teidens.getJSONObject(i);
+                                    teidenGroupSpan.append(teiden.getString("start"))
+                                        .append("～")
+                                        .append(teiden.getString("end"))
+                                        .append(teiden.getString("note"))
+                                        .append("\n");
+                                }
                                 // グループ名を前に記述
                                 teidenBuilder.append(getString(R.string.dai) + group + getString(R.string.group) + "\n");
-                                teidenBuilder.append(teidenGroupSpan + "\n");
+                                teidenBuilder.append(teidenGroupSpan.toString());
                             }
                             teidenBuilder.append("\n");
                         }
@@ -1211,7 +1227,7 @@ public class Top extends Activity implements LocationListener{
             if (mSchedule == null) {
                 try {
                     HashMap<String, String> map = new HashMap<String, String>();
-                    map.put("v", Version.SCHEDULE_2);
+                    map.put("v", Version.SCHEDULE_3);
                     response = RestfulClient.Get(URL_SCHEDULE, map);
                     mSchedule = new JSONObject(response);
                 } catch (ClientProtocolException e) {
@@ -1241,8 +1257,17 @@ public class Top extends Activity implements LocationListener{
                     JSONObject schedules = date.getJSONObject(strDate);
                     builder.append(strDate + "\n");
                     // 日付によってグループの停電時刻が変わるのに対応する！
-                    String teidenGroupSpan = schedules.getString(mGroup);
-                    builder.append(teidenGroupSpan + "\n\n");
+                    StringBuilder teidenGroupSpan = new StringBuilder();
+                    JSONArray teidens = schedules.getJSONArray(mGroup);
+                    for (int i = 0; i < teidens.length(); i++) {
+                        JSONObject teiden = teidens.getJSONObject(i);
+                        teidenGroupSpan.append(teiden.getString("start"))
+                            .append("～")
+                            .append(teiden.getString("end"))
+                            .append(teiden.getString("note"))
+                            .append("\n");
+                    }
+                    builder.append(teidenGroupSpan.toString() + "\n");
                 }
             } catch (JSONException e) {
                 // date.getJSONArray(strDate)で例外が発生するが、無視する
@@ -1297,4 +1322,126 @@ public class Top extends Activity implements LocationListener{
         Intent intent = new Intent(this, Place.class);
         startActivityForResult(intent, REQ_PLACE);
     }
+    
+    /**
+     * カレンダーに計画停電のスケジュールを登録する
+     * @param v
+     */
+    public void writeSchedule(View v) {
+        if (mSchedule != null & mSpnGroup.getSelectedItemPosition() > 0) {
+            Date date = new Date();
+            DatePickerDialog dialog = new DatePickerDialog(this,
+                    new OnDateSetListener() {
+                        
+                        public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                            int version = Build.VERSION.SDK_INT;
+                            final String calendarProvUri, eventProvUri, reminderProvUri;
+                            if (version >= 8) {
+                                calendarProvUri = "content://com.android.calendar/calendars";
+                                eventProvUri    = "content://com.android.calendar/events";
+                                reminderProvUri = "content://com.android.calendar/reminders";
+                            } else {
+                                calendarProvUri = "content://calendar/calendars";
+                                eventProvUri    = "content://calendar/events";
+                                reminderProvUri = "content://calendar/reminders";
+                            }
+                            
+                            ContentResolver contentResolver = getContentResolver();
+                            Date date = new Date(year - 1900, monthOfYear, dayOfMonth);
+                            SimpleDateFormat fmt = new SimpleDateFormat("MM月dd日(E)");
+                            // 指定された日付
+                            String day = fmt.format(date);
+                            // 指定されているグループを取得
+                            String subGroup = mSubGroups[mSpnGroup.getSelectedItemPosition()];
+                            try {
+                                // カレンダーを取得する
+                                String[] projection = new String[] { "_id", "name" };//idはプライマリーキー、nameはカレンダー名
+                                String selection = "access_level" + "=?";
+                                String[] selectionArgs = new String[] { "700" };
+                                Cursor managedCursor = managedQuery(
+                                        Uri.parse(calendarProvUri),
+                                        projection,
+                                        selection,
+                                        selectionArgs,
+                                        null);
+                                int[] mCalIds;
+                                String[] mCalNames;
+                                if (managedCursor.moveToFirst()) {
+                                    int len = managedCursor.getCount();
+                                    mCalIds = new int[len];
+                                    mCalNames = new String[len];
+
+                                    int idColumnIndex = managedCursor.getColumnIndex("_id");
+                                    int nameColumnIndex = managedCursor.getColumnIndex("name");
+
+                                    int i = 0;
+                                    do {
+                                        mCalIds[i] = managedCursor.getInt(idColumnIndex);
+                                        mCalNames[i] = managedCursor.getString(nameColumnIndex);
+                                        i++;
+                                    } while (managedCursor.moveToNext());
+                                
+                                    JSONArray teidens = mSchedule.getJSONObject("date").getJSONObject(day).getJSONArray(subGroup);
+                                    for (int j = 0; j < teidens.length(); j++) {
+                                        JSONObject teiden = teidens.getJSONObject(j);
+                                        
+                                        // 停電開始時刻を取得(ミリ秒で)
+                                        String[] start = teiden.getString("start").split(":");
+                                        date.setHours(Integer.valueOf(start[0]));
+                                        date.setMinutes(Integer.valueOf(start[1]));
+                                        long startDate = date.getTime();
+                                        
+                                        // 停電終了時刻を取得(ミリ秒で)
+                                        String[] end = teiden.getString("end").split(":");
+                                        date.setHours(Integer.valueOf(end[0]));
+                                        date.setMinutes(Integer.valueOf(end[1]));
+                                        long endDate = date.getTime();
+                                        
+                                        // 備考を取得(実施 or 中止)
+                                        String note = teiden.getString("note");
+                                        
+                                        // 計画停電をカレンダーに登録する
+                                        ContentValues cv = new ContentValues();
+                                        cv.put("calendar_id", mCalIds[0]);
+                                        cv.put("title", getString(R.string.plan_teiden) + note);
+                                        cv.put("description", (String)mSpnGroup.getSelectedItem());
+                                        // cv.put("eventLocation", "住所");
+                                        cv.put("dtstart", startDate);//ミリ秒で指定
+                                        cv.put("dtend", endDate);//ミリ秒で指定
+                                        
+                                        // 通知機能を使用する場合は1を設定する。使用しない場合は省略して良い
+                                        if (!note.equals("(中止)")){
+                                            // 実行される可能性があるので、10分前に通知
+                                            cv.put("hasAlarm", 1);
+                                            Uri eventUri = contentResolver.insert(Uri.parse(eventProvUri), cv);
+                                            long rowId = Long.parseLong(eventUri.getLastPathSegment());
+                                            cv = new ContentValues();
+                                            cv.put("event_id", rowId);
+                                            cv.put("method", 1);// 通知方法を指定する
+                                            cv.put("minutes", 10);//分単位で指定する
+                                            contentResolver.insert(Uri.parse(reminderProvUri), cv);
+                                            Toast.makeText(Top.this, R.string.regist_calendar, Toast.LENGTH_LONG).show();
+                                        } else {
+                                            // 中止なので、登録はするが、通知はしない
+                                            contentResolver.insert(Uri.parse(eventProvUri), cv);
+                                            Toast.makeText(Top.this, R.string.regist_calendar_no_alarm, Toast.LENGTH_LONG).show();
+                                        }
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                //e.printStackTrace();
+                                Toast.makeText(Top.this, R.string.cannot_get_schedule, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    },
+                    date.getYear() + 1900,
+                    date.getMonth(),
+                    date.getDate());
+            Toast.makeText(this, R.string.description_regist_calendar, Toast.LENGTH_LONG).show();
+            dialog.show();
+        } else {
+            // まだグループが選択されていないのでカレンダー登録できない
+            Toast.makeText(this, R.string.please_select_group, Toast.LENGTH_SHORT).show();
+        }
+   }
 }
