@@ -12,7 +12,7 @@
     <string name="tab_group">グループ別</string>
     <string name="address_loading">データ取得中...</string>
     <string name="teiden_loading">停電情報を取得中...</string>
-    <string name="now_location_loading">...現在地を取得中...</string>
+    <string name="now_location_loading">現在地を取得中。時間がかかる場合があります。</string>
     <string name="data_loading">現在地が取れました。\nデータを取得中...</string>
     <string name="current_group">現在地のグループ：</string>
     <string name="dai">第</string>
@@ -95,7 +95,7 @@
     <string name="menu_search">検索</string>
     <string name="menu_setting_place">場所決定</string>
     <string name="no_result_search_address">検索した地名が見つかりませんでした</string>
-    <string name="null_carrent_location">まだ位置情報の取得ができていません</string>
+    <string name="null_carrent_location">まだ現在地の取得ができていません。\n数秒後に再度お試しください。</string>
     <string name="ok">OK</string>
     <string name="title_gps_disabled">GPS設定</string>
     <string name="message_gps_disabled">GPSが起動していないため、現在地を取得できません。GPS設定画面を開かれる場合はOKボタンを押してください。
@@ -110,4 +110,7 @@
     <string name="description_regist_calendar">指定された日付の予定をカレンダーに登録します</string>
     <string name="regist_calendar">カレンダーに登録しました。停電予定10分前にアラームで通知します。</string>
     <string name="regist_calendar_no_alarm">カレンダーに登録しました。予定が中止のためアラーム通知はしません。</string>
+    <string name="preferences">設定</string>
+    <string name="category_group">グループ設定</string>
+    <string name="title_default_group">既定グループ</string>
 </resources>

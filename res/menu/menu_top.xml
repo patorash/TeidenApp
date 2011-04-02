@@ -10,16 +10,20 @@
         android:id="@+id/menu_call_touden" />
     <item
         android:title="@string/cm_on_off"
-        android:icon="@android:drawable/ic_menu_preferences"
+        android:icon="@android:drawable/ic_menu_view"
         android:id="@+id/menu_cm_on_off" />
-    <item
-        android:title="@string/about_app"
-        android:icon="@android:drawable/ic_menu_info_details"
-        android:id="@+id/menu_about_app" />
     <item
         android:title="@string/support_app"
         android:icon="@android:drawable/ic_menu_help"
         android:id="@+id/menu_support_app" />
+    <item
+        android:title="@string/preferences"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:id="@+id/menu_preferences" />
+    <item
+        android:title="@string/about_app"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:id="@+id/menu_about_app" />
     <item
         android:title="@string/finish"
         android:icon="@android:drawable/ic_menu_close_clear_cancel"

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -36,6 +37,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
+import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 import com.okolabo.android.util.DeployUtils;
@@ -114,7 +116,14 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
     private LocationManager mLocationManager;
 
     private MapController mMapController;
+    
+    /**
+     * 現在地を表示するオーバーレイ
+     */
+    private CustomMyLocationOverlay mMyLocation;
 
+    private ProgressDialog mProgress;
+    
     @Override
     protected boolean isRouteDisplayed() {
         return false;
@@ -148,6 +157,20 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
 
             }
         });
+        
+        // 現在地を取得する仕組み
+        boolean requestByTop = getIntent().getBooleanExtra("myLocationRequest", false);
+        mMyLocation = new CustomMyLocationOverlay(this, mMapView);
+        mMyLocation.enableMyLocation();
+        mMyLocation.setIsMyLocationRequestByTop(requestByTop);
+        if (requestByTop) {
+            mProgress = new ProgressDialog(this);
+            mProgress.setMessage(getString(R.string.now_location_loading));
+            mProgress.setIcon(android.R.drawable.ic_dialog_map);
+            mProgress.setIndeterminate(false);
+            mProgress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgress.show();
+        }
 
         btnMenuMyLocation = (Button) findViewById(R.id.btnMenuMyLocation);
         btnMenuSearch = (Button) findViewById(R.id.btnMenuSearch);
@@ -175,7 +198,6 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
             }
         });
 
-        // 前のActivityで選択された文字列を取得する
         mGeocoder = new Geocoder(getApplicationContext(), Locale.JAPAN);
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
@@ -204,7 +226,15 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
     }
 
     public void onLocationChanged(Location loc) {
-        // ここでは何もしない
+//        GeoPoint p = mMyLocation.getMyLocation();
+//        if (p != null) {
+//            mGeoPoint = p;
+//            mMapController.animateTo(mGeoPoint);
+//            setOverlay(mGeoPoint);
+//        } else {
+//            // まだ記録されている位置情報がない
+//            Toast.makeText(this, R.string.null_carrent_location, Toast.LENGTH_LONG).show();
+//        }
     }
 
     private void setOverlay(GeoPoint point) {
@@ -215,6 +245,7 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
         // 既に表示されているオーバーレイを消す
         overlays.clear();
         // オーバーレイを追加
+        overlays.add(mMyLocation);
         overlays.add(iconOverlay);
     }
 
@@ -227,6 +258,7 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
                     0,
                     this);
         }
+        mMyLocation.enableMyLocation();
         super.onResume();
     }
 
@@ -235,6 +267,7 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
         if (mLocationManager != null) {
             mLocationManager.removeUpdates(this);
         }
+        mMyLocation.disableMyLocation();
         super.onPause();
     }
 
@@ -266,42 +299,14 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
     }
 
     private void menu_my_location() {
-        if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            // GPSサービスがOFFになっているので、メッセージ表示
-            AlertDialog gpsDialog = new AlertDialog.Builder(this)
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .setTitle(R.string.title_gps_disabled)
-                .setMessage(R.string.message_gps_disabled)
-                .setPositiveButton(R.string.ok,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                // 端末のGSP設定画面へ誘導する
-                                Intent intent = new Intent(
-                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                                startActivity(intent);
-                                dialog.dismiss();
-                            }
-                        })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                })
-                .create();
-            gpsDialog.show();
+        GeoPoint p = mMyLocation.getMyLocation();
+        if (p != null) {
+            mGeoPoint = p;
+            mMapController.animateTo(mGeoPoint);
+            setOverlay(mGeoPoint);
         } else {
-            Location loc = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (loc != null) {
-                mGeoPoint = new GeoPoint((int) (loc.getLatitude() * 1E6),
-                        (int) (loc.getLongitude() * 1E6));
-                mMapController.animateTo(mGeoPoint);
-                setOverlay(mGeoPoint);
-            } else {
-                // まだ記録されている位置情報がない
-                Toast.makeText(this, R.string.null_carrent_location, Toast.LENGTH_LONG).show();
-            }
+            // まだ記録されている位置情報がない
+            Toast.makeText(this, R.string.null_carrent_location, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -400,9 +405,9 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
             GeoPoint cgp = mMapView.getMapCenter();
             GeoPoint point = new GeoPoint((gp.getLatitudeE6() + cgp.getLatitudeE6()) / 2, (gp
                     .getLongitudeE6() + cgp.getLongitudeE6()) / 2);
-            // mMapController.animateTo(point);
-            if (mMapController.zoomIn()) {
-                mMapController.setCenter(point);
+            mMapController.setCenter(point);
+            if (!mMapController.zoomIn()) {
+                mMapController.animateTo(gp);
             }
         }
         return false;
@@ -457,5 +462,42 @@ public class Place extends MapActivity implements LocationListener, OnGestureLis
     private GeoPoint getGeoPointByPoint(int x, int y) {
         Projection projection = mMapView.getProjection();
         return projection.fromPixels(x, y);
+    }
+    
+    
+    /**
+     * 現在地を取得したらその場所に移動する機能をもったオーバーレイ
+     * Topから現在地を取得ボタンを押された場合のみ、そのような動作をする
+     */
+    private class CustomMyLocationOverlay extends MyLocationOverlay {
+
+        private boolean isMyLocationRequestByTop;
+        
+        private boolean isFirst = true;
+        
+        public void setIsMyLocationRequestByTop(boolean requestByTop) {
+            this.isMyLocationRequestByTop = requestByTop;
+        }
+
+        public CustomMyLocationOverlay(Context context, MapView mapView) {
+            super(context, mapView);
+        }
+
+        @Override
+        public synchronized void onLocationChanged(Location location) {
+            super.onLocationChanged(location);
+            if (isFirst) {
+                isFirst = false;
+                GeoPoint p = getMyLocation();
+                mGeoPoint = p;
+                mMapController.animateTo(mGeoPoint);
+                setOverlay(mGeoPoint);
+                if (isMyLocationRequestByTop){
+                    isMyLocationRequestByTop = false;
+                    mProgress.dismiss();
+                    callFinish();
+                }
+            }
+        }
     }
 }

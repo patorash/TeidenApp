@@ -50,4 +50,60 @@
         <item>第5-Dグループ</item>
         <item>第5-Eグループ</item>
     </string-array>
+    <string-array name="default_groups">
+        <item>なし</item>
+        <item>第1-Aグループ</item>
+        <item>第1-Bグループ</item>
+        <item>第1-Cグループ</item>
+        <item>第1-Dグループ</item>
+        <item>第1-Eグループ</item>
+        <item>第2-Aグループ</item>
+        <item>第2-Bグループ</item>
+        <item>第2-Cグループ</item>
+        <item>第2-Dグループ</item>
+        <item>第2-Eグループ</item>
+        <item>第3-Aグループ</item>
+        <item>第3-Bグループ</item>
+        <item>第3-Cグループ</item>
+        <item>第3-Dグループ</item>
+        <item>第3-Eグループ</item>
+        <item>第4-Aグループ</item>
+        <item>第4-Bグループ</item>
+        <item>第4-Cグループ</item>
+        <item>第4-Dグループ</item>
+        <item>第4-Eグループ</item>
+        <item>第5-Aグループ</item>
+        <item>第5-Bグループ</item>
+        <item>第5-Cグループ</item>
+        <item>第5-Dグループ</item>
+        <item>第5-Eグループ</item>
+    </string-array>
+    <string-array name="default_group_values">
+        <item></item>
+        <item>1-A</item>
+        <item>1-B</item>
+        <item>1-C</item>
+        <item>1-D</item>
+        <item>1-E</item>
+        <item>2-A</item>
+        <item>2-B</item>
+        <item>2-C</item>
+        <item>2-D</item>
+        <item>2-E</item>
+        <item>3-A</item>
+        <item>3-B</item>
+        <item>3-C</item>
+        <item>3-D</item>
+        <item>3-E</item>
+        <item>4-A</item>
+        <item>4-B</item>
+        <item>4-C</item>
+        <item>4-D</item>
+        <item>4-E</item>
+        <item>5-A</item>
+        <item>5-B</item>
+        <item>5-C</item>
+        <item>5-D</item>
+        <item>5-E</item>
+    </string-array>
 </resources>
