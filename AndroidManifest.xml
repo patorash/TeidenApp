@@ -3,15 +3,15 @@
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="36"
-    android:versionName="3.2.0"
+    android:versionCode="37"
+    android:versionName="3.4.0"
     >
  -->
 <manifest
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.okolabo.android.teidennotify"
-    android:versionCode="36"
-    android:versionName="3.3.0"
+    android:versionCode="37"
+    android:versionName="3.4.0"
     android:installLocation="auto"
     >
     <application
@@ -48,6 +48,10 @@
         </activity>
         <activity
             android:name="Preferences"
+            >
+        </activity>
+        <activity
+            android:name="WriteSchedule"
             >
         </activity>
         <activity

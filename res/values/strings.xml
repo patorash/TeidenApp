@@ -32,8 +32,8 @@
     <string name="cm_app">この情報はAndroidアプリ「計画停電情報」より送信しています。\n
         https://market.android.com/details?id=com.okolabo.android.teidennotify
     </string>
-    <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。多少時間はかかります。
-        取れなくなったらメニューのアプリについてから連絡お願いします。</string>
+    <string name="caution_gps">取れない場合GPSをON、屋外でお試しください。
+        取れなくなったらサポート掲示板にお願いします。</string>
     <string name="caution_search">検索候補表示に対応しました。\n停電エリアのみ候補に出ます。</string>
     <string name="about_app">アプリについて</string>
     <string name="get_my_location">現在地を取得</string>
@@ -57,7 +57,7 @@
     <string name="select_location_history">現在地の履歴を選択</string>
     <string name="menu_location_history">タップ > 検索／長押し > メニュー</string>
     <string name="zip_search">郵便番号検索</string>
-    <string name="hint_zipcode">郵便番号-なしで入力</string>
+    <string name="hint_zipcode">-なしで入力</string>
     <string name="no_zip_search_description">郵便番号検索アプリが見つかりませんでした。マーケットに移動してもよろしいですか？
     </string>
     <string name="move">移動する</string>
@@ -108,9 +108,17 @@
     <string name="plan_teiden">計画停電</string>
     <string name="please_select_group">まずグループを選択してください</string>
     <string name="description_regist_calendar">指定された日付の予定をカレンダーに登録します</string>
-    <string name="regist_calendar">カレンダーに登録しました。停電予定10分前にアラームで通知します。</string>
-    <string name="regist_calendar_no_alarm">カレンダーに登録しました。予定が中止のためアラーム通知はしません。</string>
+    <string name="toast_regist_calendar">カレンダーに登録しました。</string>
     <string name="preferences">設定</string>
     <string name="category_group">グループ設定</string>
     <string name="title_default_group">既定グループ</string>
+    <string name="regist_calendar">カレンダー登録</string>
+    <string name="alarm">アラーム</string>
+    <string name="set_alarm">設定する(但し中止の場合なし)</string>
+    <string name="before_minutes">分前</string>
+    <string name="date">日付</string>
+    <string name="please_search">まず検索してください</string>
+    <string name="teiden">停電</string>
+    <string name="category_alarm">アラーム設定</string>
+    <string name="title_default_alarm_time">既定のアラーム時間</string>
 </resources>

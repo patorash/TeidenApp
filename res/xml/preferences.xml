@@ -11,4 +11,14 @@
             android:entries="@array/default_groups"
             />
     </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/category_alarm">
+        <ListPreference
+            android:title="@string/title_default_alarm_time"
+            android:key="default_alarm_time"
+            android:dialogTitle="@string/title_default_alarm_time"
+            android:entryValues="@array/default_alarm_time_values"
+            android:entries="@array/default_alarm_time"
+            />
+    </PreferenceCategory>
 </PreferenceScreen>

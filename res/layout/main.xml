@@ -64,6 +64,13 @@
                             android:adjustViewBounds="true"
                             android:onClick="showLocationHistory"
                             />
+                        <ImageButton
+                            android:src="@android:drawable/ic_menu_today"
+                            android:layout_width="48dip"
+                            android:layout_height="48dip"
+                            android:adjustViewBounds="true"
+                            android:onClick="writeSchedule"
+                            />
                     </LinearLayout>
                     <TextView
                         android:layout_width="fill_parent"
@@ -139,6 +146,13 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:onClick="showZipSearch"
+                            />
+                        <ImageButton
+                            android:src="@android:drawable/ic_menu_today"
+                            android:layout_width="48dip"
+                            android:layout_height="48dip"
+                            android:adjustViewBounds="true"
+                            android:onClick="writeSchedule"
                             />
                     </LinearLayout>
                     <LinearLayout

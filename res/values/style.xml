@@ -13,6 +13,11 @@
         <item name="android:background">@android:color/transparent</item>
         <item name="android:paddingBottom">10dip</item>
     </style>
+    <style name="TextSingleLine">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">#fff</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
     <style name="SearchDate">
         <item name="android:textSize">15sp</item>
         <item name="android:textColor">#fff</item>

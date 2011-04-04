@@ -14,6 +14,8 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
     private static final String TAG = "Preferences";
 
     private ListPreference mDefaultGroup;
+    
+    private ListPreference mDefaultAlarmTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +24,8 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
         // 各設定を取得しておく
         mDefaultGroup = (ListPreference) getPreferenceScreen().findPreference(
                 Prefs.KEY_DEFAULT_GROUP);
+        mDefaultAlarmTime = (ListPreference) getPreferenceScreen().findPreference(
+                Prefs.KEY_DEFAULT_ALARM_TIME);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
@@ -37,6 +41,16 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
                     break;
                 }
             }
+        } else if (key.equals(Prefs.KEY_DEFAULT_ALARM_TIME)) {
+            values = r.getStringArray(R.array.default_alarm_time_values);
+            for (int i = 0; i < values.length; ++i) {
+                if (sharedPreferences.getString(key, "10").equals(values[i])) {
+                    keys = r.getStringArray(R.array.default_alarm_time);
+                    mDefaultAlarmTime.setSummary(keys[i]);
+                    break;
+                }
+            }
+            
         }
     }
 
@@ -53,6 +67,15 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
             if (sharedPreferences.getString(Prefs.KEY_DEFAULT_GROUP, "").equals(values[i])) {
                 keys = r.getStringArray(R.array.default_groups);
                 mDefaultGroup.setSummary(keys[i]);
+                break;
+            }
+        }
+        // 既定のアラーム時間
+        values = r.getStringArray(R.array.default_alarm_time_values);
+        for (int i = 0; i < values.length; ++i) {
+            if (sharedPreferences.getString(Prefs.KEY_DEFAULT_ALARM_TIME, "10").equals(values[i])) {
+                keys = r.getStringArray(R.array.default_alarm_time);
+                mDefaultAlarmTime.setSummary(keys[i]);
                 break;
             }
         }
